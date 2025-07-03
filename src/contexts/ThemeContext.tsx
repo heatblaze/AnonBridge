@@ -84,7 +84,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState('blue_neon');
-  const [currentBackground, setCurrentBackground] = useState('cyberpunk_cityscape');
+  const [currentBackground, setCurrentBackground] = useState('static_dark'); // Changed default to static_dark
 
   // Load saved preferences from localStorage on mount
   useEffect(() => {
@@ -99,7 +99,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       setCurrentBackground(savedBackground);
       applyBackgroundStyle(savedBackground);
     } else {
-      applyBackgroundStyle('cyberpunk_cityscape');
+      applyBackgroundStyle('static_dark'); // Default to static_dark
     }
   }, []);
 

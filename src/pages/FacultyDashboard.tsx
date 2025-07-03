@@ -34,7 +34,7 @@ interface StudentChat {
 
 const FacultyDashboard: React.FC = () => {
   const { user, setUser } = useUser();
-  const { currentTheme, themes, setCurrentTheme } = useTheme();
+  const { currentTheme, themes, setCurrentTheme, currentBackground } = useTheme();
   const theme = themes.find(t => t.id === currentTheme) || themes[0];
   const navigate = useNavigate();
   
@@ -228,7 +228,7 @@ const FacultyDashboard: React.FC = () => {
       case 'high': return 'text-orange-400 bg-orange-500/20 border-orange-500/50';
       case 'normal': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/50';
       case 'low': return 'text-green-400 bg-green-500/20 border-green-500/50';
-      default: return 'text-gray-400 bg-gray-500/20 border-gray-500/50';
+      default: return 'text-white bg-gray-500/20 border-gray-500/50';
     }
   };
 
@@ -237,7 +237,7 @@ const FacultyDashboard: React.FC = () => {
       case 'active': return 'text-green-400';
       case 'waiting': return 'text-yellow-400';
       case 'resolved': return 'text-blue-400';
-      default: return 'text-gray-400';
+      default: return 'text-white';
     }
   };
 
@@ -261,9 +261,21 @@ const FacultyDashboard: React.FC = () => {
   const waitingChats = filteredChats.filter(chat => chat.status === 'waiting').length;
   const pinnedChats = filteredChats.filter(chat => chat.isPinned);
 
+  // Check if background should show overlay
+  const shouldShowOverlay = currentBackground === 'cyberpunk_cityscape' || 
+                           currentBackground === 'neon_waves' || 
+                           currentBackground === 'matrix_rain' ||
+                           currentBackground === 'holographic_city' ||
+                           currentBackground === 'pulsing_energy';
+
   return (
     <div className="min-h-screen theme-faculty relative overflow-hidden">
       <AnimatedBackground />
+
+      {/* Overlay for better visibility when sidebars are collapsed */}
+      {(isChatSidebarCollapsed || !selectedChat) && shouldShowOverlay && (
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-5" />
+      )}
 
       <div className="relative z-10 flex h-screen ">
         {/* Sidebar */}
@@ -285,7 +297,7 @@ const FacultyDashboard: React.FC = () => {
                   <h2 className="font-orbitron text-lg sm:text-xl font-bold text-red-400">
                     Student Chats
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                  <p className="text-xs sm:text-sm text-white mt-1">
                     {user.anonymousId} • {totalUnreadCount} unread
                   </p>
                 </div>
@@ -297,7 +309,7 @@ const FacultyDashboard: React.FC = () => {
                         className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
                         title="Theme Settings"
                       >
-                        <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                        <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </button>
                       <button
                         onClick={handleLogout}
@@ -315,9 +327,9 @@ const FacultyDashboard: React.FC = () => {
                     title={isChatSidebarCollapsed ? 'Expand Chat Sidebar' : 'Collapse Chat Sidebar'}
                   >
                     {isChatSidebarCollapsed ? (
-                      <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" />
+                      <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" />
                     ) : (
-                      <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" />
+                      <X className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" />
                     )}
                   </button>
                 </div>
@@ -350,7 +362,7 @@ const FacultyDashboard: React.FC = () => {
                     title="Theme Settings"
                   >
                     <Settings 
-                      className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" 
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" 
                       style={{ color: theme.primary }}
                     />
                   </button>
@@ -369,13 +381,13 @@ const FacultyDashboard: React.FC = () => {
               {!isChatSidebarCollapsed && (
                 <>
                   <div className="relative mb-3">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-white" />
                     <input
                       type="text"
                       placeholder="Search student chats..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-8 sm:pl-10 pr-4 py-2 text-white placeholder-gray-400 text-xs sm:text-sm focus:outline-none focus:border-red-400 transition-colors"
+                      className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-8 sm:pl-10 pr-4 py-2 text-white placeholder-white text-xs sm:text-sm focus:outline-none focus:border-red-400 transition-colors"
                     />
                   </div>
 
@@ -428,7 +440,7 @@ const FacultyDashboard: React.FC = () => {
               <div className="p-3 sm:p-4 border-b border-gray-700/30">
                 <div className="flex items-center gap-2 mb-3">
                   <Star className="w-3 h-3 sm:w-4 sm:h-4 text-red-400" />
-                  <h3 className="font-rajdhani font-semibold text-xs sm:text-sm uppercase tracking-wide text-gray-300">
+                  <h3 className="font-rajdhani font-semibold text-xs sm:text-sm uppercase tracking-wide text-white">
                     Pinned Chats
                   </h3>
                 </div>
@@ -450,7 +462,7 @@ const FacultyDashboard: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-400 text-xs truncate">{chat.threadTitle}</p>
+                      <p className="text-white text-xs truncate">{chat.threadTitle}</p>
                     </div>
                   ))}
                 </div>
@@ -473,7 +485,7 @@ const FacultyDashboard: React.FC = () => {
                       title={chat.anonymousId}
                     >
                       <User 
-                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" 
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" 
                         style={{ color: selectedChat === chat.id ? theme.primary : undefined }}
                       />
                       {chat.unreadCount > 0 && (
@@ -516,7 +528,7 @@ const FacultyDashboard: React.FC = () => {
                           </div>
                           <div>
                             <h3 className="font-medium text-white text-xs sm:text-sm">{chat.anonymousId}</h3>
-                            <p className="text-gray-500 text-xs">{chat.threadTitle}</p>
+                            <p className="text-white text-xs">{chat.threadTitle}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -537,7 +549,7 @@ const FacultyDashboard: React.FC = () => {
                                 e.stopPropagation();
                                 togglePinChat(chat.id);
                               }}
-                              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                              className="p-1 hover:bg-gray-700 rounded text-white hover:text-white transition-colors"
                               title={chat.isPinned ? 'Unpin' : 'Pin'}
                             >
                               <Star className="w-2 h-2 sm:w-3 sm:h-3" />
@@ -547,7 +559,7 @@ const FacultyDashboard: React.FC = () => {
                                 e.stopPropagation();
                                 archiveChat(chat.id);
                               }}
-                              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                              className="p-1 hover:bg-gray-700 rounded text-white hover:text-white transition-colors"
                               title="Archive"
                             >
                               <Archive className="w-2 h-2 sm:w-3 sm:h-3" />
@@ -556,10 +568,10 @@ const FacultyDashboard: React.FC = () => {
                         </div>
                       </div>
                       
-                      <p className="text-gray-400 text-xs truncate mb-2">{chat.lastMessage}</p>
+                      <p className="text-white text-xs truncate mb-2">{chat.lastMessage}</p>
                       
                       <div className="flex items-center justify-between text-xs mb-2">
-                        <span className="text-gray-500 truncate">{chat.department}</span>
+                        <span className="text-white truncate">{chat.department}</span>
                         <div className="flex items-center gap-2">
                           <span className={`px-2 py-1 rounded-full border text-xs ${getPriorityColor(chat.priority)}`}>
                             {chat.priority}
@@ -572,10 +584,10 @@ const FacultyDashboard: React.FC = () => {
 
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
-                          <Clock className="w-2 h-2 sm:w-3 sm:h-3 text-gray-500" />
-                          <span className="text-gray-500">{formatTime(chat.timestamp)}</span>
+                          <Clock className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                          <span className="text-white">{formatTime(chat.timestamp)}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-500">
+                        <div className="flex items-center gap-2 text-white">
                           <span>{chat.messageCount} msgs</span>
                           {chat.studentYear && (
                             <>
@@ -592,8 +604,8 @@ const FacultyDashboard: React.FC = () => {
                   {filteredChats.length === 0 && (
                     <div className="text-center py-8 sm:py-12">
                       <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-500 font-rajdhani text-sm sm:text-base">No student chats found</p>
-                      <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                      <p className="text-white font-rajdhani text-sm sm:text-base">No student chats found</p>
+                      <p className="text-white text-xs sm:text-sm mt-1">
                         {searchTerm || filterDepartment !== 'all' || filterPriority !== 'all' || filterStatus !== 'all'
                           ? 'Try adjusting your filters'
                           : 'Students will appear here when they start conversations'
@@ -621,7 +633,7 @@ const FacultyDashboard: React.FC = () => {
                         <h3 className="font-orbitron font-semibold text-white text-sm sm:text-base">
                           {studentChats.find(c => c.id === selectedChat)?.anonymousId}
                         </h3>
-                        <p className="text-xs sm:text-sm text-gray-400">
+                        <p className="text-xs sm:text-sm text-white">
                           {studentChats.find(c => c.id === selectedChat)?.threadTitle}
                         </p>
                       </div>
@@ -670,17 +682,17 @@ const FacultyDashboard: React.FC = () => {
                   <h3 className="font-orbitron text-lg sm:text-xl text-red-400 mb-2">
                     Faculty Support Center
                   </h3>
-                  <p className="text-gray-400 font-rajdhani text-sm sm:text-base mb-6">
+                  <p className="text-white font-rajdhani text-sm sm:text-base mb-6">
                     Select a student chat to view and respond to their questions. All conversations are anonymous and secure.
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm max-w-sm mx-auto">
                     <div className="bg-gray-800/30 p-3 sm:p-4 rounded-lg">
                       <div className="text-red-400 font-bold text-base sm:text-lg">{filteredChats.length}</div>
-                      <div className="text-gray-500 text-xs sm:text-sm">Active Chats</div>
+                      <div className="text-white text-xs sm:text-sm">Active Chats</div>
                     </div>
                     <div className="bg-gray-800/30 p-3 sm:p-4 rounded-lg">
                       <div className="text-red-400 font-bold text-base sm:text-lg">{totalUnreadCount}</div>
-                      <div className="text-gray-500 text-xs sm:text-sm">Unread Messages</div>
+                      <div className="text-white text-xs sm:text-sm">Unread Messages</div>
                     </div>
                   </div>
                 </div>

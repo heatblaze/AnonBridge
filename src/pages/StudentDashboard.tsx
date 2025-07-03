@@ -30,7 +30,7 @@ interface ChatThread {
 
 const StudentDashboard: React.FC = () => {
   const { user, setUser } = useUser();
-  const { currentTheme, themes } = useTheme();
+  const { currentTheme, themes, currentBackground } = useTheme();
   const theme = themes.find(t => t.id === currentTheme) || themes[0];
   const navigate = useNavigate();
   
@@ -250,9 +250,21 @@ const StudentDashboard: React.FC = () => {
   const totalUnreadCount = chatThreads.reduce((sum, thread) => sum + thread.unreadCount, 0);
   const pinnedThreads = chatThreads.filter(thread => thread.isPinned && !thread.isArchived);
 
+  // Check if background should show overlay
+  const shouldShowOverlay = currentBackground === 'cyberpunk_cityscape' || 
+                           currentBackground === 'neon_waves' || 
+                           currentBackground === 'matrix_rain' ||
+                           currentBackground === 'holographic_city' ||
+                           currentBackground === 'pulsing_energy';
+
   return (
     <div className="min-h-screen theme-student relative overflow-hidden">
       <AnimatedBackground />
+      
+      {/* Overlay for better visibility when sidebars are collapsed */}
+      {(isChatSidebarCollapsed || !selectedThread) && shouldShowOverlay && (
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-5" />
+      )}
       
       <div className="relative z-10 flex h-screen">
         {/* Sidebar */}
@@ -274,7 +286,7 @@ const StudentDashboard: React.FC = () => {
                   <h2 className="font-orbitron text-lg sm:text-xl font-bold" style={{ color: theme.primary }}>
                     Chat Threads
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                  <p className="text-xs sm:text-sm text-white mt-1">
                     {user.anonymousId} • {totalUnreadCount} unread
                   </p>
                 </div>
@@ -286,7 +298,7 @@ const StudentDashboard: React.FC = () => {
                         className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
                         title="Theme Settings"
                       >
-                        <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                        <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </button>
                       <button
                         onClick={handleLogout}
@@ -304,9 +316,9 @@ const StudentDashboard: React.FC = () => {
                     title={isChatSidebarCollapsed ? 'Expand Chat Sidebar' : 'Collapse Chat Sidebar'}
                   >
                     {isChatSidebarCollapsed ? (
-                      <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" />
+                      <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" />
                     ) : (
-                      <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" />
+                      <X className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" />
                     )}
                   </button>
                 </div>
@@ -358,7 +370,7 @@ const StudentDashboard: React.FC = () => {
                     title="Theme Settings"
                   >
                     <Settings 
-                      className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" 
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" 
                       style={{ color: theme.primary }}
                     />
                   </button>
@@ -378,13 +390,13 @@ const StudentDashboard: React.FC = () => {
             {!isChatSidebarCollapsed && (
               <div className="p-3 sm:p-4 border-b border-gray-700/30">
                 <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   <input
                     type="text"
                     placeholder="Search chats..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-8 sm:pl-10 pr-4 py-2 text-white placeholder-gray-400 text-xs sm:text-sm focus:outline-none transition-colors"
+                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-8 sm:pl-10 pr-4 py-2 text-white placeholder-white text-xs sm:text-sm focus:outline-none transition-colors"
                     style={{ 
                       focusBorderColor: theme.primary,
                       borderColor: `${theme.primary}30`
@@ -402,7 +414,7 @@ const StudentDashboard: React.FC = () => {
                       className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize whitespace-nowrap ${
                         filterStatus === filter
                           ? 'text-black'
-                          : 'text-gray-400 hover:text-gray-300'
+                          : 'text-white hover:text-white'
                       }`}
                       style={{
                         backgroundColor: filterStatus === filter ? theme.primary : 'rgba(75, 85, 99, 0.3)',
@@ -421,7 +433,7 @@ const StudentDashboard: React.FC = () => {
               <div className="p-3 sm:p-4 border-b border-gray-700/30">
                 <div className="flex items-center gap-2 mb-3">
                   <Star className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: theme.primary }} />
-                  <h3 className="font-rajdhani font-semibold text-xs sm:text-sm uppercase tracking-wide text-gray-300">
+                  <h3 className="font-rajdhani font-semibold text-xs sm:text-sm uppercase tracking-wide text-white">
                     Pinned
                   </h3>
                 </div>
@@ -446,7 +458,7 @@ const StudentDashboard: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-400 text-xs truncate">{thread.lastMessage}</p>
+                      <p className="text-white text-xs truncate">{thread.lastMessage}</p>
                     </div>
                   ))}
                 </div>
@@ -469,7 +481,7 @@ const StudentDashboard: React.FC = () => {
                       title={thread.title}
                     >
                       <MessageSquare 
-                        className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-white transition-colors" 
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" 
                         style={{ color: selectedThread === thread.id ? theme.primary : undefined }}
                       />
                       {thread.unreadCount > 0 && (
@@ -514,7 +526,7 @@ const StudentDashboard: React.FC = () => {
                               <Star className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" style={{ color: theme.primary }} />
                             )}
                           </div>
-                          <p className="text-gray-500 text-xs">{thread.subject}</p>
+                          <p className="text-white text-xs">{thread.subject}</p>
                         </div>
                         <div className="flex items-center gap-2 ml-2">
                           {thread.unreadCount > 0 && (
@@ -531,7 +543,7 @@ const StudentDashboard: React.FC = () => {
                                 e.stopPropagation();
                                 togglePinThread(thread.id);
                               }}
-                              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                              className="p-1 hover:bg-gray-700 rounded text-white hover:text-white transition-colors"
                               title={thread.isPinned ? 'Unpin' : 'Pin'}
                             >
                               <Star className="w-2 h-2 sm:w-3 sm:h-3" />
@@ -541,7 +553,7 @@ const StudentDashboard: React.FC = () => {
                                 e.stopPropagation();
                                 archiveThread(thread.id);
                               }}
-                              className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white transition-colors"
+                              className="p-1 hover:bg-gray-700 rounded text-white hover:text-white transition-colors"
                               title="Archive"
                             >
                               <Archive className="w-2 h-2 sm:w-3 sm:h-3" />
@@ -550,11 +562,11 @@ const StudentDashboard: React.FC = () => {
                         </div>
                       </div>
                       
-                      <p className="text-gray-400 text-xs truncate mb-2">{thread.lastMessage}</p>
+                      <p className="text-white text-xs truncate mb-2">{thread.lastMessage}</p>
                       
                       <div className="flex items-center justify-between text-xs">
                         <span style={{ color: theme.accent }}>{thread.facultyId}</span>
-                        <span className="text-gray-500">{formatTime(thread.timestamp)}</span>
+                        <span className="text-white">{formatTime(thread.timestamp)}</span>
                       </div>
                     </div>
                   ))}
@@ -563,10 +575,10 @@ const StudentDashboard: React.FC = () => {
                   {filteredThreads.length === 0 && (
                     <div className="text-center py-8 sm:py-12">
                       <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-500 font-rajdhani text-sm sm:text-base">
+                      <p className="text-white font-rajdhani text-sm sm:text-base">
                         {searchTerm ? 'No chats found' : 'No chat threads yet'}
                       </p>
-                      <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                      <p className="text-white text-xs sm:text-sm mt-1">
                         {searchTerm ? 'Try a different search term' : 'Start a new conversation with faculty'}
                       </p>
                     </div>
@@ -598,7 +610,7 @@ const StudentDashboard: React.FC = () => {
                   <h3 className="font-orbitron text-lg sm:text-xl mb-2" style={{ color: theme.primary }}>
                     Welcome to AnonBridge
                   </h3>
-                  <p className="text-gray-400 font-rajdhani text-sm sm:text-base mb-6">
+                  <p className="text-white font-rajdhani text-sm sm:text-base mb-6">
                     Select a chat thread to continue your conversation or start a new one to connect with faculty anonymously.
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm max-w-sm mx-auto">
@@ -606,13 +618,13 @@ const StudentDashboard: React.FC = () => {
                       <div className="font-bold text-base sm:text-lg" style={{ color: theme.primary }}>
                         {filteredThreads.length}
                       </div>
-                      <div className="text-gray-500 text-xs sm:text-sm">Active Chats</div>
+                      <div className="text-white text-xs sm:text-sm">Active Chats</div>
                     </div>
                     <div className="bg-gray-800/30 p-3 sm:p-4 rounded-lg">
                       <div className="font-bold text-base sm:text-lg" style={{ color: theme.primary }}>
                         {totalUnreadCount}
                       </div>
-                      <div className="text-gray-500 text-xs sm:text-sm">Unread Messages</div>
+                      <div className="text-white text-xs sm:text-sm">Unread Messages</div>
                     </div>
                   </div>
                 </div>
