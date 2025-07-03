@@ -274,7 +274,7 @@ const FacultyDashboard: React.FC = () => {
 
       {/* Overlay for better visibility when sidebars are collapsed */}
       {(isChatSidebarCollapsed || !selectedChat) && shouldShowOverlay && (
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-5" />
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] z-5" />
       )}
 
       <div className="relative z-10 flex h-screen ">
