@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const AnimatedBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,6 +19,11 @@ const AnimatedBackground: React.FC = () => {
     windows: Array<{ x: number; y: number; lit: boolean; flickerTimer: number }>;
     color: string;
   }>>([]);
+
+  const location = useLocation();
+  
+  // Check if we're on dashboard pages
+  const isDashboardPage = location.pathname === '/student' || location.pathname === '/faculty';
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -107,24 +113,36 @@ const AnimatedBackground: React.FC = () => {
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw cyberpunk grid
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
-      ctx.lineWidth = 1;
-      
-      const gridSize = 50;
-      const offsetY = (currentTime * 0.02) % gridSize;
-      
-      for (let x = 0; x < canvas.width; x += gridSize) {
+      // Skip grid and scanning lines for dashboard pages
+      if (!isDashboardPage) {
+        // Draw cyberpunk grid
+        ctx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
+        ctx.lineWidth = 1;
+        
+        const gridSize = 50;
+        const offsetY = (currentTime * 0.02) % gridSize;
+        
+        for (let x = 0; x < canvas.width; x += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        
+        for (let y = -gridSize; y < canvas.height + gridSize; y += gridSize) {
+          ctx.beginPath();
+          ctx.moveTo(0, y + offsetY);
+          ctx.lineTo(canvas.width, y + offsetY);
+          ctx.stroke();
+        }
+
+        // Draw scanning lines
+        const scanLineY = (currentTime * 0.1) % canvas.height;
+        ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      
-      for (let y = -gridSize; y < canvas.height + gridSize; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y + offsetY);
-        ctx.lineTo(canvas.width, y + offsetY);
+        ctx.moveTo(0, scanLineY);
+        ctx.lineTo(canvas.width, scanLineY);
         ctx.stroke();
       }
 
@@ -233,15 +251,6 @@ const AnimatedBackground: React.FC = () => {
         ctx.shadowBlur = 0;
       });
 
-      // Draw scanning lines
-      const scanLineY = (currentTime * 0.1) % canvas.height;
-      ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(0, scanLineY);
-      ctx.lineTo(canvas.width, scanLineY);
-      ctx.stroke();
-
       // Draw holographic elements
       ctx.strokeStyle = 'rgba(124, 58, 237, 0.4)';
       ctx.lineWidth = 1;
@@ -276,7 +285,7 @@ const AnimatedBackground: React.FC = () => {
       window.removeEventListener('resize', resizeCanvas);
       cancelAnimationFrame(animationId);
     };
-  }, []);
+  }, [isDashboardPage]);
 
   return (
     <canvas

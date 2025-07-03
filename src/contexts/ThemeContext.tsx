@@ -84,7 +84,7 @@ interface ThemeProviderProps {
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState('blue_neon');
-  const [currentBackground, setCurrentBackground] = useState('static_dark'); // Changed default to static_dark
+  const [currentBackground, setCurrentBackground] = useState('pulsing_energy'); // Changed default to pulsing_energy
 
   // Load saved preferences from localStorage on mount
   useEffect(() => {
@@ -99,7 +99,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       setCurrentBackground(savedBackground);
       applyBackgroundStyle(savedBackground);
     } else {
-      applyBackgroundStyle('static_dark'); // Default to static_dark
+      applyBackgroundStyle('pulsing_energy'); // Default to pulsing_energy
     }
   }, []);
 
