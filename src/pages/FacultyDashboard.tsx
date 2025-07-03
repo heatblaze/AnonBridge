@@ -265,7 +265,7 @@ const FacultyDashboard: React.FC = () => {
     <div className="min-h-screen theme-faculty relative overflow-hidden">
       <AnimatedBackground />
 
-      <div className="relative z-10 flex h-screen bg-black/50 z-[-1]">
+      <div className="relative z-10 flex h-screen ">
         {/* Sidebar */}
         <div className="hidden lg:block">
           <Sidebar 
