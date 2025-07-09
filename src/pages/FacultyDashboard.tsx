@@ -181,7 +181,6 @@ const FacultyDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Theme Selector Modal */}
       <ThemeSelector
