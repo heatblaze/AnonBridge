@@ -619,7 +619,9 @@ const FacultyDashboard: React.FC = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
+          <div className={`flex-1 flex flex-col ${
+            selectedChat ? 'block' : 'hidden lg:block'
+          }`}>
             {selectedChat ? (
               <div className="flex flex-col h-full">
                 {/* Chat Header with Controls */}
@@ -699,7 +701,6 @@ const FacultyDashboard: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
       </div>
 
       {/* Theme Selector Modal */}
