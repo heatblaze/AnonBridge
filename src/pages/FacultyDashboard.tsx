@@ -33,14 +33,154 @@ interface StudentChat {
 }
 
 const FacultyDashboard: React.FC = () => {
-  // ... rest of the component code ...
+  const { user, logout } = useUser();
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+  
+  const [chats, setChats] = useState<StudentChat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'waiting' | 'resolved'>('all');
+  const [filterPriority, setFilterPriority] = useState<'all' | 'low' | 'normal' | 'high' | 'urgent'>('all');
+  const [isThemeSelectorOpen, setIsThemeSelectorOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isChatListCollapsed, setIsChatListCollapsed] = useState(false);
+  const [shouldShowOverlay, setShouldShowOverlay] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Calculate total unread count
+  const totalUnreadCount = chats.reduce((total, chat) => total + chat.unreadCount, 0);
+
+  // Filter chats based on search and filters
+  const filteredChats = chats.filter(chat => {
+    const matchesSearch = chat.anonymousId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         chat.threadTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         chat.department.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' || chat.status === filterStatus;
+    const matchesPriority = filterPriority === 'all' || chat.priority === filterPriority;
+    
+    return matchesSearch && matchesStatus && matchesPriority && !chat.isArchived;
+  });
+
+  // Load chats on component mount
+  useEffect(() => {
+    const loadChats = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        const userChats = await getUserChats(user.id);
+        
+        // Transform the data to match StudentChat interface
+        const transformedChats: StudentChat[] = userChats.map(chat => ({
+          id: chat.id,
+          anonymousId: chat.student?.anonymous_id || 'Unknown Student',
+          department: chat.student?.department || 'Unknown Department',
+          lastMessage: chat.messages && chat.messages.length > 0 
+            ? chat.messages[chat.messages.length - 1].content 
+            : 'No messages yet',
+          timestamp: new Date(chat.created_at),
+          unreadCount: 0, // This would need to be calculated based on read status
+          priority: 'normal' as const,
+          threadTitle: chat.messages && chat.messages.length > 0 
+            ? chat.messages[0].content.substring(0, 50) + '...'
+            : 'New Chat',
+          subject: 'General Support',
+          isArchived: false,
+          isPinned: false,
+          studentYear: chat.student?.year,
+          messageCount: chat.messages ? chat.messages.length : 0,
+          status: 'active' as const,
+          student: chat.student
+        }));
+        
+        setChats(transformedChats);
+      } catch (error) {
+        console.error('Error loading chats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChats();
+  }, [user?.id]);
+
+  // Manage overlay visibility
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 1024;
+      setShouldShowOverlay(isMobile && (isSidebarOpen || !selectedChat));
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen, selectedChat]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const markAsRead = (chatId: string) => {
+    setChats(prev => prev.map(chat => 
+      chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
+    ));
+  };
+
+  const formatTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const handleSendMessage = async (content: string) => {
+    if (!selectedChat || !user?.id) return;
+
+    try {
+      await appendMessage(selectedChat, {
+        content,
+        sender_id: user.id,
+        sender_type: 'faculty',
+        timestamp: new Date().toISOString()
+      });
+
+      // Update local state
+      setChats(prev => prev.map(chat => 
+        chat.id === selectedChat 
+          ? { 
+              ...chat, 
+              lastMessage: content,
+              timestamp: new Date(),
+              messageCount: chat.messageCount + 1
+            }
+          : chat
+      ));
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
+
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
 
   return (
     <div className="min-h-screen theme-faculty relative overflow-hidden">
       <AnimatedBackground />
 
       {/* Overlay for better visibility when sidebars are collapsed */}
-      {(isChatSidebarCollapsed || !selectedChat) && shouldShowOverlay && (
+      {(isChatListCollapsed || !selectedChat) && shouldShowOverlay && (
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] z-5" />
       )}
 
