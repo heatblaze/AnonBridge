@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Pin, Zap, Bell, Settings, Users, Shield, BookOpen, Calendar, HelpCircle, Star, ChevronDown, ChevronRight, AlertTriangle, Clock, FileText, Video, MessageCircle, Award, TrendingUp, Menu, X, Flag } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
+import { reportIssue } from '../lib/database';
 
 interface SidebarProps {
   role: 'student' | 'faculty';
@@ -37,13 +38,16 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onThemeToggle }) => {
     if (!reportReason.trim()) return;
     
     try {
-      console.log('Issue reported from sidebar:', {
+      const { data, error } = await reportIssue({
         reason: reportReason,
         comment: reportComment,
-        reportedBy: user?.anonymousId,
-        timestamp: new Date().toISOString(),
+        reportedBy: user?.anonymousId || 'Unknown',
         userRole: role
       });
+
+      if (error) {
+        throw new Error(error.message);
+      }
       
       setReportReason('');
       setReportComment('');

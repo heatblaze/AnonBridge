@@ -327,6 +327,7 @@ const StudentDashboard: React.FC = () => {
               {/* New Chat Button */}
               {!isChatSidebarCollapsed && (
                 <button
+import { ArrowLeft } from 'lucide-react';
                   onClick={startNewChatThread}
                   disabled={isCreatingThread}
                   className="w-full font-rajdhani font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
@@ -590,9 +591,22 @@ const StudentDashboard: React.FC = () => {
 
           {/* Chat Area */}
           <div className={`flex-1 flex flex-col ${
+            selectedThread ? 'block' : 'hidden lg:flex'
+          }`}>
             selectedThread ? 'block' : 'hidden lg:block'
           }`}>
             {selectedThread ? (
+              <div className="h-full">
+                {/* Mobile back button */}
+                <div className="lg:hidden p-4 border-b border-gray-700/50 bg-gray-800/30">
+                  <button
+                    onClick={() => setSelectedThread('')}
+                    className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Chats
+                  </button>
+                </div>
               <ChatBox 
                 role="student" 
                 threadId={selectedThread} 
@@ -605,8 +619,9 @@ const StudentDashboard: React.FC = () => {
                   ));
                 }}
               />
+              </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center bg-gray-900/20 p-4">
+              <div className="flex-1 flex items-center justify-center bg-gray-900/20 p-4 hidden lg:flex">
                 <div className="text-center max-w-md">
                   <MessageSquare className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4" style={{ color: `${theme.primary}50` }} />
                   <h3 className="font-orbitron text-lg sm:text-xl mb-2" style={{ color: theme.primary }}>
@@ -632,6 +647,102 @@ const StudentDashboard: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Mobile Chat List Overlay */}
+        <div className={`lg:hidden fixed inset-0 z-20 ${
+          selectedThread ? 'hidden' : 'block'
+        }`}>
+          <div className="h-full bg-gray-900/40 backdrop-blur-sm">
+            {/* Same content as desktop chat list but optimized for mobile */}
+            <div className="p-4 border-b border-gray-700/50">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="font-orbitron text-lg font-bold" style={{ color: theme.primary }}>
+                    Chat Threads
+                  </h2>
+                  <p className="text-xs text-white mt-1">
+                    {user?.anonymousId} • {totalUnreadCount} unread
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsThemeSelectorOpen(true)}
+                    className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
+                    title="Theme Settings"
+                  >
+                    <Settings className="w-4 h-4 text-white" />
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors text-red-400"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* New Chat Button */}
+              <button
+                onClick={startNewChatThread}
+                disabled={isCreatingThread}
+                className="w-full font-rajdhani font-semibold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm mb-4"
+                style={{
+                  background: `linear-gradient(45deg, ${theme.primary}, ${theme.secondary})`,
+                  boxShadow: `0 0 20px ${theme.primary}40`
+                }}
+              >
+                {isCreatingThread ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                {isCreatingThread ? 'Creating...' : 'Start New Chat'}
+              </button>
+            </div>
+
+            {/* Mobile Thread List */}
+            <div className="p-4 space-y-3 overflow-y-auto" style={{ height: 'calc(100vh - 200px)' }}>
+              {filteredThreads.map((thread) => (
+                <div
+                  key={thread.id}
+                  onClick={() => {
+                    setSelectedThread(thread.id);
+                    markAsRead(thread.id);
+                  }}
+                  className="p-4 rounded-lg cursor-pointer transition-all duration-300 border bg-gray-800/30 border-gray-700/30 hover:border-gray-600/50 hover:bg-gray-800/50"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-white text-sm truncate">{thread.title}</h3>
+                        {thread.isPinned && (
+                          <Star className="w-3 h-3 flex-shrink-0" style={{ color: theme.primary }} />
+                        )}
+                      </div>
+                      <p className="text-white text-xs">{thread.subject}</p>
+                    </div>
+                    {thread.unreadCount > 0 && (
+                      <span 
+                        className="text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ml-2"
+                        style={{ backgroundColor: theme.primary }}
+                      >
+                        {thread.unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-white text-xs truncate mb-2">{thread.lastMessage}</p>
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: theme.accent }}>{thread.facultyId}</span>
+                    <span className="text-white">{formatTime(thread.timestamp)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
       </div>
 

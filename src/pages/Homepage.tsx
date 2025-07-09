@@ -135,17 +135,6 @@ const Homepage: React.FC = () => {
 
           {/* Additional cyberpunk effects overlay */}
           <div className="absolute top-0 left-0 w-full h-full z-[-1]">
-            {/* Scanning lines */}
-            <div className="absolute inset-0 opacity-20">
-              <div 
-                className="absolute inset-0"
-                style={{
-                  background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 212, 255, 0.1) 2px, rgba(0, 212, 255, 0.1) 4px)',
-                  animation: 'scan-lines 2s linear infinite'
-                }}
-              />
-            </div>
-            
             {/* Grid overlay */}
             <div 
               className="absolute inset-0 opacity-10"

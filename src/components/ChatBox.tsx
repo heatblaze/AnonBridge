@@ -3,6 +3,7 @@ import { Send, Flag, MoreVertical, User, Shield, Clock, Paperclip, Smile, X, Ale
 import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
 import { appendMessage, getChatMessages, markMessagesAsRead } from '../lib/database';
+import { reportIssue } from '../lib/database';
 
 interface Message {
   id: string;
@@ -245,21 +246,23 @@ const ChatBox: React.FC<ChatBoxProps> = ({ role, threadId, recipientId, onNewMes
     if (!reportReason.trim()) return;
     
     try {
-      // Here you would typically send the report to your backend
-      console.log('Issue reported:', {
-        threadId,
+      const { data, error } = await reportIssue({
         reason: reportReason,
         comment: reportComment,
-        reportedBy: user?.anonymousId,
-        timestamp: new Date().toISOString()
+        reportedBy: user?.anonymousId || 'Unknown',
+        threadId,
+        userRole: role
       });
+
+      if (error) {
+        throw new Error(error.message);
+      }
       
       // Reset form and close modal
       setReportReason('');
       setReportComment('');
       setShowReportModal(false);
       
-      // Show success message (you could use a toast notification)
       alert('Issue reported successfully. Our team will review it shortly.');
     } catch (error) {
       console.error('Error reporting issue:', error);
