@@ -589,7 +589,9 @@ const StudentDashboard: React.FC = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-1 flex flex-col">
+          <div className={`flex-1 flex flex-col ${
+            selectedThread ? 'block' : 'hidden lg:block'
+          }`}>
             {selectedThread ? (
               <ChatBox 
                 role="student" 
@@ -631,7 +633,6 @@ const StudentDashboard: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
       </div>
 
       {/* Theme Selector Modal */}

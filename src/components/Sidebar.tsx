@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pin, Zap, Bell, Settings, Users, Shield, BookOpen, Calendar, HelpCircle, Star, ChevronDown, ChevronRight, AlertTriangle, Clock, FileText, Video, MessageCircle, Award, TrendingUp, Menu, X } from 'lucide-react';
+import { Pin, Zap, Bell, Settings, Users, Shield, BookOpen, Calendar, HelpCircle, Star, ChevronDown, ChevronRight, AlertTriangle, Clock, FileText, Video, MessageCircle, Award, TrendingUp, Menu, X, Flag } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
 
@@ -15,6 +15,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onThemeToggle }) => {
 
   // Sidebar collapse state
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportComment, setReportComment] = useState('');
 
   // Collapsible section states
   const [sectionsExpanded, setSectionsExpanded] = useState({
@@ -28,6 +31,29 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onThemeToggle }) => {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const handleReportIssue = async () => {
+    if (!reportReason.trim()) return;
+    
+    try {
+      console.log('Issue reported from sidebar:', {
+        reason: reportReason,
+        comment: reportComment,
+        reportedBy: user?.anonymousId,
+        timestamp: new Date().toISOString(),
+        userRole: role
+      });
+      
+      setReportReason('');
+      setReportComment('');
+      setShowReportModal(false);
+      
+      alert('Issue reported successfully. Our team will review it shortly.');
+    } catch (error) {
+      console.error('Error reporting issue:', error);
+      alert('Failed to report issue. Please try again.');
+    }
   };
 
   const notices = role === 'student'
@@ -419,6 +445,14 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onThemeToggle }) => {
             )}
             
             <button
+              onClick={() => setShowReportModal(true)}
+              className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors group"
+              title="Report Issue"
+            >
+              <Flag className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
+            </button>
+            
+            <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors group"
               title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
@@ -444,6 +478,14 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onThemeToggle }) => {
                 className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" 
                 style={{ color: theme.primary }}
               />
+            </button>
+            
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="w-full p-3 rounded-lg hover:bg-gray-800/50 transition-colors group flex items-center justify-center"
+              title="Report Issue"
+            >
+              <Flag className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300 transition-colors" />
             </button>
             
             <div className="space-y-2">
@@ -634,6 +676,79 @@ const Sidebar: React.FC<SidebarProps> = ({ role, onThemeToggle }) => {
           </>
         )}
       </div>
+
+      {/* Report Issue Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowReportModal(false)} />
+          <div className="relative bg-gray-900/95 border border-gray-700 rounded-xl p-6 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-orbitron text-lg font-bold text-white flex items-center gap-2">
+                <Flag className="w-5 h-5 text-yellow-400" />
+                Report Issue
+              </h3>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="p-1 rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Issue Type
+                </label>
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-yellow-400 transition-colors"
+                >
+                  <option value="">Select issue type</option>
+                  <option value="inappropriate_content">Inappropriate Content</option>
+                  <option value="harassment">Harassment</option>
+                  <option value="spam">Spam</option>
+                  <option value="technical_issue">Technical Issue</option>
+                  <option value="privacy_concern">Privacy Concern</option>
+                  <option value="platform_bug">Platform Bug</option>
+                  <option value="feature_request">Feature Request</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Additional Comments (Optional)
+                </label>
+                <textarea
+                  value={reportComment}
+                  onChange={(e) => setReportComment(e.target.value)}
+                  placeholder="Provide additional details about the issue..."
+                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors resize-none"
+                  rows={3}
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReportIssue}
+                disabled={!reportReason.trim()}
+                className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              >
+                Report Issue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

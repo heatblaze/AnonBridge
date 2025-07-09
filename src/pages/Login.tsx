@@ -147,6 +147,15 @@ const Login: React.FC = () => {
           year: existingUser.year,
           anonymousId: existingUser.anonymous_id
         };
+        
+        // Validate role matches the selected role
+        if (user.role !== formData.role) {
+          setErrors({ 
+            submit: `This email is registered as ${user.role}. Please use the correct portal or contact support.` 
+          });
+          setIsLoading(false);
+          return;
+        }
       } else {
         // New user, register them
         const { data: newUser, error: registerError } = await registerUser({
