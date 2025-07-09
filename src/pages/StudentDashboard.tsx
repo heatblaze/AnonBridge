@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Plus, LogOut, Settings, Search, Filter, Archive, Star, Menu, X } from 'lucide-react';
+import { MessageSquare, Plus, LogOut, Settings, Search, Filter, Archive, Star, Menu, X, ArrowLeft } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import ChatBox from '../components/ChatBox';
@@ -327,7 +327,6 @@ const StudentDashboard: React.FC = () => {
               {/* New Chat Button */}
               {!isChatSidebarCollapsed && (
                 <button
-import { ArrowLeft } from 'lucide-react';
                   onClick={startNewChatThread}
                   disabled={isCreatingThread}
                   className="w-full font-rajdhani font-semibold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
@@ -592,8 +591,6 @@ import { ArrowLeft } from 'lucide-react';
           {/* Chat Area */}
           <div className={`flex-1 flex flex-col ${
             selectedThread ? 'block' : 'hidden lg:flex'
-          }`}>
-            selectedThread ? 'block' : 'hidden lg:block'
           }`}>
             {selectedThread ? (
               <div className="h-full">
