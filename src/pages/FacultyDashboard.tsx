@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Filter, LogOut, Settings, AlertTriangle, User, Search, Clock, Star, Archive, Menu, X, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Filter, LogOut, Settings, AlertTriangle, User, Search, Clock, Star, Archive, Menu, X } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import ChatBox from '../components/ChatBox';
@@ -46,6 +46,7 @@ const FacultyDashboard: React.FC = () => {
   const [filterPriority, setFilterPriority] = useState<'all' | 'urgent' | 'high' | 'normal' | 'low'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'waiting' | 'resolved'>('all');
   const [isChatSidebarCollapsed, setIsChatSidebarCollapsed] = useState(false);
+  const [isMobileChatListOpen, setIsMobileChatListOpen] = useState(true);
 
   // Set faculty theme on mount
   useEffect(() => {
@@ -173,6 +174,19 @@ const FacultyDashboard: React.FC = () => {
 
   const closeChat = () => {
     setSelectedChat('');
+    // On mobile, show chat list when closing chat
+    if (window.innerWidth < 1024) {
+      setIsMobileChatListOpen(true);
+    }
+  };
+
+  const handleChatSelect = (chatId: string) => {
+    setSelectedChat(chatId);
+    markAsRead(chatId);
+    // On mobile, hide chat list when chat is selected
+    if (window.innerWidth < 1024) {
+      setIsMobileChatListOpen(false);
+    }
   };
 
   const handleNewMessage = async (message: string) => {
@@ -278,7 +292,7 @@ const FacultyDashboard: React.FC = () => {
       )}
 
       <div className="relative z-10 flex h-screen">
-        {/* Sidebar */}
+        {/* Desktop Sidebar */}
         <div className="hidden lg:block">
           <Sidebar 
             role="faculty" 
@@ -286,10 +300,51 @@ const FacultyDashboard: React.FC = () => {
           />
         </div>
 
+        {/* Mobile Header */}
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-gray-900/90 backdrop-blur-sm border-b border-gray-700/50">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsMobileChatListOpen(!isMobileChatListOpen)}
+                className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
+              >
+                <Menu className="w-5 h-5 text-white" />
+              </button>
+              <div>
+                <h1 className="font-orbitron text-lg font-bold text-red-400">
+                  Faculty Portal
+                </h1>
+                <p className="text-xs text-gray-400">{user.anonymousId}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsThemeSelectorOpen(true)}
+                className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
+              >
+                <Settings className="w-5 h-5 text-white" />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors text-red-400"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:flex-row">
-          {/* Student Chat List */}
-          <div className={`${isChatSidebarCollapsed ? 'w-16' : 'w-full lg:w-96'} bg-gray-900/40 backdrop-blur-sm border-r border-gray-700/50 overflow-y-auto transition-all duration-300`}>
+        <div className="flex-1 flex flex-col lg:flex-row pt-16 lg:pt-0">
+          {/* Student Chat List - Mobile Overlay / Desktop Sidebar */}
+          <div className={`
+            ${isMobileChatListOpen ? 'translate-x-0' : '-translate-x-full'} 
+            lg:translate-x-0 
+            ${isChatSidebarCollapsed ? 'lg:w-16' : 'w-full lg:w-96'} 
+            fixed lg:relative inset-y-0 left-0 z-20 lg:z-auto
+            bg-gray-900/95 lg:bg-gray-900/40 backdrop-blur-sm border-r border-gray-700/50 
+            overflow-y-auto transition-all duration-300 pt-16 lg:pt-0
+          `}>
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-gray-700/50">
               <div className="flex items-center justify-between mb-4">
@@ -306,14 +361,14 @@ const FacultyDashboard: React.FC = () => {
                     <>
                       <button
                         onClick={() => setIsThemeSelectorOpen(true)}
-                        className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
+                        className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors hidden lg:block"
                         title="Theme Settings"
                       >
                         <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors text-red-400"
+                        className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors text-red-400 hidden lg:block"
                         title="Logout"
                       >
                         <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -323,7 +378,7 @@ const FacultyDashboard: React.FC = () => {
                   
                   <button
                     onClick={() => setIsChatSidebarCollapsed(!isChatSidebarCollapsed)}
-                    className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors group"
+                    className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors group hidden lg:block"
                     title={isChatSidebarCollapsed ? 'Expand Chat Sidebar' : 'Collapse Chat Sidebar'}
                   >
                     {isChatSidebarCollapsed ? (
@@ -331,6 +386,14 @@ const FacultyDashboard: React.FC = () => {
                     ) : (
                       <X className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:text-white transition-colors" />
                     )}
+                  </button>
+
+                  {/* Mobile close button */}
+                  <button
+                    onClick={() => setIsMobileChatListOpen(false)}
+                    className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors lg:hidden"
+                  >
+                    <X className="w-5 h-5 text-white" />
                   </button>
                 </div>
               </div>
@@ -448,10 +511,7 @@ const FacultyDashboard: React.FC = () => {
                   {pinnedChats.slice(0, 2).map((chat) => (
                     <div
                       key={chat.id}
-                      onClick={() => {
-                        setSelectedChat(chat.id);
-                        markAsRead(chat.id);
-                      }}
+                      onClick={() => handleChatSelect(chat.id)}
                       className="p-2 sm:p-3 rounded-lg cursor-pointer transition-all duration-300 border border-gray-700/30 hover:border-gray-600/50 bg-gray-800/20"
                     >
                       <div className="flex items-center justify-between mb-1">
@@ -470,17 +530,14 @@ const FacultyDashboard: React.FC = () => {
             )}
 
             {/* Student Chat List */}
-            <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+            <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 flex-1 overflow-y-auto">
               {isChatSidebarCollapsed ? (
                 // Collapsed state - show only icons
                 <div className="space-y-2">
                   {filteredChats.slice(0, 6).map((chat) => (
                     <button
                       key={chat.id}
-                      onClick={() => {
-                        setSelectedChat(chat.id);
-                        markAsRead(chat.id);
-                      }}
+                      onClick={() => handleChatSelect(chat.id)}
                       className="w-full p-2 sm:p-3 rounded-lg hover:bg-gray-800/50 transition-colors group flex items-center justify-center relative"
                       title={chat.anonymousId}
                     >
@@ -511,10 +568,7 @@ const FacultyDashboard: React.FC = () => {
                   {filteredChats.map((chat) => (
                     <div
                       key={chat.id}
-                      onClick={() => {
-                        setSelectedChat(chat.id);
-                        markAsRead(chat.id);
-                      }}
+                      onClick={() => handleChatSelect(chat.id)}
                       className={`p-3 sm:p-4 rounded-lg cursor-pointer transition-all duration-300 border group ${
                         selectedChat === chat.id
                           ? 'bg-red-500/10 border-red-500/50'
@@ -618,6 +672,14 @@ const FacultyDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Mobile Overlay Background */}
+          {isMobileChatListOpen && (
+            <div 
+              className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+              onClick={() => setIsMobileChatListOpen(false)}
+            />
+          )}
+
           {/* Chat Area */}
           <div className="flex-1 flex flex-col">
             {selectedChat ? (
@@ -695,6 +757,14 @@ const FacultyDashboard: React.FC = () => {
                       <div className="text-white text-xs sm:text-sm">Unread Messages</div>
                     </div>
                   </div>
+                  
+                  {/* Mobile View Chat List Button */}
+                  <button
+                    onClick={() => setIsMobileChatListOpen(true)}
+                    className="mt-6 lg:hidden px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-rajdhani font-semibold text-sm transition-all duration-300 hover:scale-105"
+                  >
+                    View Student Chats
+                  </button>
                 </div>
               </div>
             )}
