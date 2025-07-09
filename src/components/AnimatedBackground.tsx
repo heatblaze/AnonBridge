@@ -135,15 +135,6 @@ const AnimatedBackground: React.FC = () => {
           ctx.lineTo(canvas.width, y + offsetY);
           ctx.stroke();
         }
-
-        // Draw scanning lines
-        const scanLineY = (currentTime * 0.1) % canvas.height;
-        ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, scanLineY);
-        ctx.lineTo(canvas.width, scanLineY);
-        ctx.stroke();
       }
 
       // Draw cityscape buildings
