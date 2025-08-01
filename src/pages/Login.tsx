@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, User, GraduationCap, Building, ArrowRight, Shield, ArrowLeft } from 'lucide-react';
+import { Mail, User, GraduationCap, Building, ArrowRight, Shield, ArrowLeft, Key } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GlitchButton from '../components/GlitchButton';
@@ -15,6 +15,7 @@ const Login: React.FC = () => {
   
   const [formData, setFormData] = useState({
     email: '',
+    password: '',
     role: searchParams.get('role') || '',
     department: '',
     year: ''
@@ -86,6 +87,13 @@ const Login: React.FC = () => {
     return '';
   };
 
+  const validatePassword = (password: string) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    return '';
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -93,6 +101,11 @@ const Login: React.FC = () => {
     const emailError = validateEmail(formData.email);
     if (emailError) {
       newErrors.email = emailError;
+    }
+
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
     }
 
     if (!formData.role) {
@@ -156,31 +169,21 @@ const Login: React.FC = () => {
           setIsLoading(false);
           return;
         }
-      } else {
-        // New user, register them
-        const { data: newUser, error: registerError } = await registerUser({
-          email: formData.email,
-          role: formData.role,
-          department: formData.department,
-          year: formData.year,
-          theme: formData.role === 'student' ? 'blue_neon' : 'red_alert'
-        });
 
-        if (registerError || !newUser) {
-          console.error('Registration error:', registerError);
-          setErrors({ submit: 'Registration failed. Please try again.' });
+        // In a real implementation, you would verify the password here
+        // For now, we'll just check if password is provided
+        if (!formData.password) {
+          setErrors({ submit: 'Password is required for login.' });
           setIsLoading(false);
           return;
         }
-
-        user = {
-          id: newUser.id,
-          email: newUser.email,
-          role: newUser.role as 'student' | 'faculty',
-          department: newUser.department,
-          year: newUser.year,
-          anonymousId: newUser.anonymous_id
-        };
+      } else {
+        // User doesn't exist, redirect to registration
+        setErrors({ 
+          submit: 'Account not found. Please register first or check your email address.' 
+        });
+        setIsLoading(false);
+        return;
       }
 
       setUser(user);
@@ -327,6 +330,30 @@ const Login: React.FC = () => {
                 )}
               </div>
               {errors.email && <p className="text-red-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+              {/* Password Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
+                  Password
+                </label>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
+                    placeholder="Enter your password"
+                    style={{
+                      focusBorderColor: 'var(--form-primary)',
+                      borderColor: formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : undefined
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
+                    onBlur={(e) => e.target.style.borderColor = formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
+                  />
+                </div>
+                {errors.password && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.password}</p>}
+              </div>
+
                 <span className="w-1 h-1 bg-red-400 rounded-full"></span>
                 {errors.email}
               </p>}
@@ -472,6 +499,15 @@ const Login: React.FC = () => {
             <p className="text-center text-gray-600 text-xs font-rajdhani mt-1">
               Restricted to Manipal University community
             </p>
+            <div className="text-center mt-2">
+              <span className="text-gray-500 text-xs">Don't have an account? </span>
+              <button
+                onClick={() => navigate('/register')}
+                className="text-cyan-400 hover:text-cyan-300 transition-colors text-xs font-medium"
+              >
+                Click here to register
+              </button>
+            </div>
           </div>
         </div>
       </div>

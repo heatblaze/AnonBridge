@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Users, MessageSquare, AlertTriangle, Eye, Search, Filter, Download, ArrowLeft, FileText, Calendar } from 'lucide-react';
 import AnimatedBackground from '../components/AnimatedBackground';
+import ChatViewModal from '../components/ChatViewModal';
 import { getUserChats, supabase } from '../lib/database';
 
 const AdminPanel: React.FC = () => {
@@ -16,6 +17,8 @@ const AdminPanel: React.FC = () => {
   const [chats, setChats] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedChatForView, setSelectedChatForView] = useState<any>(null);
+  const [isChatViewModalOpen, setIsChatViewModalOpen] = useState(false);
 
   // Admin credentials
   const ADMIN_CREDENTIALS = {
@@ -181,6 +184,16 @@ const AdminPanel: React.FC = () => {
       console.error('Error exporting data:', error);
       alert('Error exporting data. Please try again.');
     }
+  };
+
+  const handleViewChat = (chat: any) => {
+    setSelectedChatForView(chat);
+    setIsChatViewModalOpen(true);
+  };
+
+  const handleCloseChatView = () => {
+    setSelectedChatForView(null);
+    setIsChatViewModalOpen(false);
   };
 
   if (!isAuthenticated) {
@@ -517,7 +530,7 @@ const AdminPanel: React.FC = () => {
                         </div>
                         <button className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 bg-red-600/20 text-red-400 border border-red-600/50 rounded-lg hover:bg-red-600/30 transition-colors text-xs sm:text-sm">
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-                          View Chat
+                          <span onClick={() => handleViewChat(chat)}>View Chat</span>
                         </button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
@@ -587,6 +600,19 @@ const AdminPanel: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Chat View Modal */}
+      {selectedChatForView && (
+        <ChatViewModal
+          isOpen={isChatViewModalOpen}
+          onClose={handleCloseChatView}
+          chatId={selectedChatForView.id}
+          participants={selectedChatForView.participants || ['Student#Unknown', 'Faculty#Unknown']}
+          department={selectedChatForView.department}
+          messageCount={selectedChatForView.messageCount}
+          createdAt={selectedChatForView.created_at}
+        />
+      )}
     </div>
   );
 };

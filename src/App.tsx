@@ -4,6 +4,7 @@ import { UserProvider } from './contexts/UserContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Homepage from './pages/Homepage';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import StudentDashboard from './pages/StudentDashboard';
 import FacultyDashboard from './pages/FacultyDashboard';
 import AdminPanel from './pages/AdminPanel';
@@ -19,6 +20,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Homepage />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/student" element={<StudentDashboard />} />
               <Route path="/faculty" element={<FacultyDashboard />} />
               <Route path="/admin" element={<AdminPanel />} />
