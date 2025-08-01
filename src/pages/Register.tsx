@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, User, GraduationCap, Building, ArrowRight, Shield, ArrowLeft, Key, CheckCircle } from 'lucide-react';
+import { Mail, User, GraduationCap, Building, ArrowRight, Shield, ArrowLeft, Key, CheckCircle, Phone } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import GlitchButton from '../components/GlitchButton';
 import AnimatedBackground from '../components/AnimatedBackground';
@@ -14,6 +14,7 @@ const Register: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    contactNumber: '',
     role: searchParams.get('role') || '',
     department: '',
     year: ''
@@ -85,6 +86,27 @@ const Register: React.FC = () => {
     return '';
   };
 
+  const validateContactNumber = (number: string) => {
+    if (!number.trim()) {
+      return 'Contact number is required';
+    }
+    
+    // Remove all non-digit characters for validation
+    const cleanNumber = number.replace(/\D/g, '');
+    
+    if (cleanNumber.length !== 10) {
+      return 'Please enter a valid 10-digit mobile number';
+    }
+    
+    // Check if it starts with valid Indian mobile prefixes
+    const validPrefixes = ['6', '7', '8', '9'];
+    if (!validPrefixes.includes(cleanNumber[0])) {
+      return 'Please enter a valid Indian mobile number';
+    }
+    
+    return '';
+  };
+
   const validatePassword = (password: string) => {
     if (!password) {
       return 'Password is required';
@@ -104,6 +126,11 @@ const Register: React.FC = () => {
     const emailError = validateEmail(formData.email);
     if (emailError) {
       newErrors.email = emailError;
+    }
+
+    const contactError = validateContactNumber(formData.contactNumber);
+    if (contactError) {
+      newErrors.contactNumber = contactError;
     }
 
     const passwordError = validatePassword(formData.password);
@@ -131,6 +158,23 @@ const Register: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const formatContactNumber = (value: string) => {
+    // Remove all non-digit characters
+    const cleanValue = value.replace(/\D/g, '');
+    
+    // Limit to 10 digits
+    const limitedValue = cleanValue.slice(0, 10);
+    
+    // Format as XXX-XXX-XXXX for better readability
+    if (limitedValue.length >= 6) {
+      return `${limitedValue.slice(0, 3)}-${limitedValue.slice(3, 6)}-${limitedValue.slice(6)}`;
+    } else if (limitedValue.length >= 3) {
+      return `${limitedValue.slice(0, 3)}-${limitedValue.slice(3)}`;
+    }
+    
+    return limitedValue;
+  };
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -139,14 +183,14 @@ const Register: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate OTP sending (replace with actual API call)
+      // Simulate OTP sending to mobile number (replace with actual SMS API call)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       setOtpSent(true);
       setIsLoading(false);
       
-      // In a real implementation, you would call your backend API to send OTP
-      console.log('OTP sent to:', formData.email);
+      // In a real implementation, you would call your SMS API to send OTP
+      console.log('OTP sent to mobile:', formData.contactNumber);
       
     } catch (error) {
       console.error('Error sending OTP:', error);
@@ -187,7 +231,13 @@ const Register: React.FC = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Special handling for contact number formatting
+    if (field === 'contactNumber') {
+      const formattedValue = formatContactNumber(value);
+      setFormData(prev => ({ ...prev, [field]: formattedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
     
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -197,6 +247,13 @@ const Register: React.FC = () => {
       const emailError = validateEmail(value);
       if (emailError) {
         setErrors(prev => ({ ...prev, email: emailError }));
+      }
+    }
+    
+    if (field === 'contactNumber' && value.trim()) {
+      const contactError = validateContactNumber(value);
+      if (contactError) {
+        setErrors(prev => ({ ...prev, contactNumber: contactError }));
       }
     }
     
@@ -234,6 +291,11 @@ const Register: React.FC = () => {
     return emailLower.endsWith('@manipal.edu') || emailLower.endsWith('@learner.manipal.edu');
   };
 
+  const isValidContactNumber = (number: string) => {
+    const cleanNumber = number.replace(/\D/g, '');
+    return cleanNumber.length === 10 && ['6', '7', '8', '9'].includes(cleanNumber[0]);
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
       <AnimatedBackground />
@@ -269,11 +331,11 @@ const Register: React.FC = () => {
                 className="font-orbitron text-2xl sm:text-3xl font-bold neon-glow transition-colors duration-300"
                 style={{ color: 'var(--form-primary)' }}
               >
-                {otpSent ? 'Verify Email' : 'Register'}
+                {otpSent ? 'Verify Mobile' : 'Register'}
               </h1>
             </div>
             <p className="text-gray-400 font-rajdhani text-sm sm:text-base">
-              {otpSent ? 'Enter the OTP sent to your email' : 'Create your AnonBridge account'}
+              {otpSent ? 'Enter the OTP sent to your mobile' : 'Create your AnonBridge account'}
             </p>
             <p className="text-gray-500 font-rajdhani text-xs sm:text-sm mt-2">
               Manipal University Students & Faculty Only
@@ -314,6 +376,43 @@ const Register: React.FC = () => {
                     Valid Manipal University email
                   </p>
                 )}
+              </div>
+
+              {/* Contact Number Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                  <div className="absolute left-10 sm:left-12 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                    +91
+                  </div>
+                  <input
+                    type="tel"
+                    value={formData.contactNumber}
+                    onChange={(e) => handleInputChange('contactNumber', e.target.value)}
+                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-16 sm:pl-20 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
+                    placeholder="XXX-XXX-XXXX"
+                    maxLength={12} // Includes dashes
+                    style={{
+                      focusBorderColor: 'var(--form-primary)',
+                      borderColor: formData.contactNumber ? (errors.contactNumber ? '#ef4444' : 'var(--form-primary)') : undefined
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
+                    onBlur={(e) => e.target.style.borderColor = formData.contactNumber ? (errors.contactNumber ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
+                  />
+                </div>
+                {errors.contactNumber && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.contactNumber}</p>}
+                {!errors.contactNumber && formData.contactNumber && isValidContactNumber(formData.contactNumber) && (
+                  <p className="text-green-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-green-400 rounded-full"></span>
+                    Valid mobile number
+                  </p>
+                )}
+                <p className="text-gray-500 text-xs mt-1">
+                  OTP will be sent to this number for verification
+                </p>
               </div>
 
               {/* Password Field */}
@@ -477,8 +576,8 @@ const Register: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-sm sm:text-base">Send OTP</span>
+                    <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-sm sm:text-base">Send OTP to Mobile</span>
                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 )}
@@ -492,11 +591,11 @@ const Register: React.FC = () => {
             /* OTP Verification Form */
             <form onSubmit={handleVerifyOTP} className="space-y-6">
               <div className="text-center mb-6">
-                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                <Phone className="w-12 h-12 text-green-400 mx-auto mb-4" />
                 <p className="text-gray-300 text-sm">
                   We've sent a 6-digit OTP to
                 </p>
-                <p className="text-white font-medium">{formData.email}</p>
+                <p className="text-white font-medium">+91 {formData.contactNumber}</p>
               </div>
 
               <div>
