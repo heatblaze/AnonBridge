@@ -411,7 +411,7 @@ const Register: React.FC = () => {
                   </p>
                 )}
                 <p className="text-gray-500 text-xs mt-1">
-                  OTP will be sent to this number for verification
+                  OTP will be sent via SMS and WhatsApp for verification
                 </p>
               </div>
 
