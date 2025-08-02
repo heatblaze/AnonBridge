@@ -138,53 +138,18 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Check if user already exists
-      const { exists, user: existingUser, error: checkError } = await checkUserExists(formData.email);
+      // Simulate login process (replace with actual authentication)
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      if (checkError) {
-        console.error('Error checking user:', checkError);
-        setErrors({ submit: 'Error checking user. Please try again.' });
-        setIsLoading(false);
-        return;
-      }
-
-      let user;
-
-      if (exists && existingUser) {
-        // User exists, log them in
-        user = {
-          id: existingUser.id,
-          email: existingUser.email,
-          role: existingUser.role as 'student' | 'faculty',
-          department: existingUser.department,
-          year: existingUser.year,
-          anonymousId: existingUser.anonymous_id
-        };
-        
-        // Validate role matches the selected role
-        if (user.role !== formData.role) {
-          setErrors({ 
-            submit: `This email is registered as ${user.role}. Please use the correct portal or contact support.` 
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        // In a real implementation, you would verify the password here
-        // For now, we'll just check if password is provided
-        if (!formData.password) {
-          setErrors({ submit: 'Password is required for login.' });
-          setIsLoading(false);
-          return;
-        }
-      } else {
-        // User doesn't exist, redirect to registration
-        setErrors({ 
-          submit: 'Account not found. Please register first or check your email address.' 
-        });
-        setIsLoading(false);
-        return;
-      }
+      // Create user object based on form data
+      const user = {
+        id: `user_${Date.now()}`,
+        email: formData.email,
+        role: formData.role as 'student' | 'faculty',
+        department: formData.department,
+        year: formData.year,
+        anonymousId: generateAnonymousId(formData.role)
+      };
 
       setUser(user);
 
@@ -369,6 +334,29 @@ const Login: React.FC = () => {
               </p>
             </div>
 
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
+                Password
+              </label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
+                  placeholder="Enter your password"
+                  style={{
+                    focusBorderColor: 'var(--form-primary)',
+                    borderColor: formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : undefined
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
+                  onBlur={(e) => e.target.style.borderColor = formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
+                />
+              </div>
+              {errors.password && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.password}</p>}
+            </div>
             {/* Role Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-3 font-rajdhani uppercase tracking-wide">
@@ -502,7 +490,7 @@ const Login: React.FC = () => {
             <div className="text-center mt-2">
               <span className="text-gray-500 text-xs">Don't have an account? </span>
               <button
-                onClick={() => navigate('/register')}
+                onClick={() => navigate(`/register?role=${formData.role}`)}
                 className="text-cyan-400 hover:text-cyan-300 transition-colors text-xs font-medium"
               >
                 Click here to register
