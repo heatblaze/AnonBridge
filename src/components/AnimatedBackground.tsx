@@ -102,6 +102,14 @@ const AnimatedBackground: React.FC = () => {
       const deltaTime = currentTime - lastTime;
       lastTime = currentTime;
 
+      // Helper function for color conversion - declare at top
+      const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      };
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Draw gradient sky
@@ -117,12 +125,6 @@ const AnimatedBackground: React.FC = () => {
       if (!isDashboardPage) {
         // Draw cyberpunk grid
         const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary') || '#00d4ff';
-        const hexToRgba = (hex: string, alpha: number) => {
-          const r = parseInt(hex.slice(1, 3), 16);
-          const g = parseInt(hex.slice(3, 5), 16);
-          const b = parseInt(hex.slice(5, 7), 16);
-          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        };
         
         ctx.strokeStyle = hexToRgba(primaryColor, 0.08);
         ctx.lineWidth = 1;
@@ -155,12 +157,6 @@ const AnimatedBackground: React.FC = () => {
         
         // Building outline
         const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary') || '#00d4ff';
-        const hexToRgba = (hex: string, alpha: number) => {
-          const r = parseInt(hex.slice(1, 3), 16);
-          const g = parseInt(hex.slice(3, 5), 16);
-          const b = parseInt(hex.slice(5, 7), 16);
-          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        };
         
         ctx.strokeStyle = hexToRgba(primaryColor, 0.3);
         ctx.lineWidth = 1;
@@ -266,12 +262,6 @@ const AnimatedBackground: React.FC = () => {
 
       // Draw holographic elements
       const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-accent') || '#06b6d4';
-      const hexToRgba = (hex: string, alpha: number) => {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-      };
       ctx.strokeStyle = hexToRgba(accentColor, 0.4);
       ctx.lineWidth = 1;
       const holoSize = 100;
