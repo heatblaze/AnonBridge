@@ -377,17 +377,8 @@ const Homepage: React.FC = () => {
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}60`}
                 onMouseLeave={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}30`}
-                style={{
-                  borderColor: `${currentThemeColors.primary}30`,
-                  '--hover-border': `${currentThemeColors.primary}60`
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}60`}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}30`}
               >
-                <feature.icon 
-                  className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4" 
-                  style={{ color: currentThemeColors.primary }}
-                />
+                <stat.icon 
                   className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" 
                   style={{ color: currentThemeColors.primary }}
                 />
