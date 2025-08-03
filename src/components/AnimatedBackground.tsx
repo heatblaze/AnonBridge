@@ -229,13 +229,6 @@ const AnimatedBackground: React.FC = () => {
         ctx.fill();
         
         // Drone trail
-        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-secondary') || '#ff4444';
-        const hexToRgba = (hex: string, alpha: number) => {
-          const r = parseInt(hex.slice(1, 3), 16);
-          const g = parseInt(hex.slice(3, 5), 16);
-          const b = parseInt(hex.slice(5, 7), 16);
-          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        };
         ctx.strokeStyle = hexToRgba(secondaryColor, 0.5);
         ctx.lineWidth = 1;
         ctx.beginPath();
