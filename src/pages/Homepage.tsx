@@ -480,14 +480,28 @@ const Homepage: React.FC = () => {
             <button className="text-gray-400 hover:text-cyan-400 transition-colors">
               Privacy Policy
             </button>
+            <button 
+              className="text-gray-400 transition-colors"
+              style={{ '--hover-color': currentThemeColors.primary }}
+              onMouseEnter={(e) => e.currentTarget.style.color = currentThemeColors.primary}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+            >
+              Privacy Policy
+            </button>
             <span className="text-gray-600 hidden sm:inline">•</span>
-            <button className="text-gray-400 hover:text-cyan-400 transition-colors">
+            <button 
+              className="text-gray-400 transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.color = currentThemeColors.primary}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+            >
               Terms of Service
             </button>
             <span className="text-gray-600 hidden sm:inline">•</span>
             <button 
               onClick={() => navigate('/contact-support')}
-              className="text-gray-400 hover:text-cyan-400 transition-colors"
+              className="text-gray-400 transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.color = currentThemeColors.primary}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
             >
               Contact Support
             </button>
