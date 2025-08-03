@@ -5,7 +5,7 @@ import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GlitchButton from '../components/GlitchButton';
 import AnimatedBackground from '../components/AnimatedBackground';
-import { registerUser, checkUserExists } from '../lib/database';
+import { checkUserExists } from '../lib/database';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +23,8 @@ const Login: React.FC = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [userExists, setUserExists] = useState(false);
 
   const departments = [
     'Computer Science Engineering',
@@ -67,18 +69,15 @@ const Login: React.FC = () => {
       return 'Email is required';
     }
     
-    // Check if email contains @ symbol
     if (!email.includes('@')) {
       return 'Please enter a valid email address';
     }
     
-    // Check if email ends with either manipal.edu domain
     const emailLower = email.toLowerCase();
     if (!emailLower.endsWith('@manipal.edu') && !emailLower.endsWith('@learner.manipal.edu')) {
       return 'Only Manipal University email addresses (@manipal.edu or @learner.manipal.edu) are allowed';
     }
     
-    // Basic email format validation for both domains
     const emailRegex = /^[^\s@]+@(manipal\.edu|learner\.manipal\.edu)$/i;
     if (!emailRegex.test(email)) {
       return 'Please enter a valid Manipal University email address';
@@ -97,32 +96,67 @@ const Login: React.FC = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Validate email with Manipal domain restriction
     const emailError = validateEmail(formData.email);
     if (emailError) {
       newErrors.email = emailError;
     }
 
-    const passwordError = validatePassword(formData.password);
-    if (passwordError) {
-      newErrors.password = passwordError;
-    }
+    if (showPasswordField) {
+      const passwordError = validatePassword(formData.password);
+      if (passwordError) {
+        newErrors.password = passwordError;
+      }
 
-    if (!formData.role) {
-      newErrors.role = 'Please select your role';
-    }
+      if (!formData.role) {
+        newErrors.role = 'Please select your role';
+      }
 
-    if (!formData.department) {
-      newErrors.department = 'Please select your department';
-    }
+      if (!formData.department) {
+        newErrors.department = 'Please select your department';
+      }
 
-    if (formData.role === 'student' && !formData.year) {
-      newErrors.year = 'Please select your year';
+      if (formData.role === 'student' && !formData.year) {
+        newErrors.year = 'Please select your year';
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  // Check if user exists when email changes
+  useEffect(() => {
+    const checkUser = async () => {
+      if (formData.email && !validateEmail(formData.email)) {
+        try {
+          const { exists, user, error } = await checkUserExists(formData.email);
+          
+          if (!error) {
+            setUserExists(exists);
+            setShowPasswordField(exists);
+            
+            if (exists && user) {
+              // Pre-fill form with user data
+              setFormData(prev => ({
+                ...prev,
+                role: user.role || prev.role,
+                department: user.department || prev.department,
+                year: user.year || prev.year
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('Error checking user:', error);
+        }
+      } else {
+        setUserExists(false);
+        setShowPasswordField(false);
+      }
+    };
+
+    const timeoutId = setTimeout(checkUser, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [formData.email]);
 
   const generateAnonymousId = (role: string) => {
     const prefix = role === 'student' ? 'Student' : 'Faculty';
@@ -135,10 +169,15 @@ const Login: React.FC = () => {
     
     if (!validateForm()) return;
 
+    if (!userExists) {
+      setErrors({ email: 'No account found with this email. Please register first.' });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Simulate login process (replace with actual authentication)
+      // Simulate login authentication (replace with actual authentication)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Create user object based on form data
@@ -164,7 +203,7 @@ const Login: React.FC = () => {
       navigate(user.role === 'student' ? '/student' : '/faculty');
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ submit: 'Login failed. Please try again.' });
+      setErrors({ submit: 'Login failed. Please check your credentials and try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -206,13 +245,6 @@ const Login: React.FC = () => {
       background: 'rgba(17, 24, 39, 0.8)',
       boxShadow: 'none'
     };
-  };
-
-  const getEmailDomainHint = () => {
-    if (formData.email && !formData.email.includes('@')) {
-      return '@manipal.edu';
-    }
-    return '';
   };
 
   const isValidManipalEmail = (email: string) => {
@@ -287,15 +319,30 @@ const Login: React.FC = () => {
                   onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
                   onBlur={(e) => e.target.style.borderColor = formData.email ? (errors.email ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
                 />
-                {/* Email domain hint */}
-                {getEmailDomainHint() && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs sm:text-sm pointer-events-none">
-                    {getEmailDomainHint()}
-                  </div>
-                )}
               </div>
               {errors.email && <p className="text-red-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
-              {/* Password Field */}
+                <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                {errors.email}
+              </p>}
+              {!errors.email && formData.email && isValidManipalEmail(formData.email) && userExists && (
+                <p className="text-green-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-green-400 rounded-full"></span>
+                  Account found - please enter your password
+                </p>
+              )}
+              {!errors.email && formData.email && isValidManipalEmail(formData.email) && !userExists && (
+                <p className="text-yellow-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-yellow-400 rounded-full"></span>
+                  No account found with this email
+                </p>
+              )}
+              <p className="text-gray-500 text-xs mt-1">
+                Accepted domains: @manipal.edu or @learner.manipal.edu
+              </p>
+            </div>
+
+            {/* Password Field - Only show if user exists */}
+            {showPasswordField && (
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
                   Password
@@ -318,110 +365,77 @@ const Login: React.FC = () => {
                 </div>
                 {errors.password && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.password}</p>}
               </div>
+            )}
 
-                <span className="w-1 h-1 bg-red-400 rounded-full"></span>
-                {errors.email}
-              </p>}
-              {!errors.email && formData.email && isValidManipalEmail(formData.email) && (
-                <p className="text-green-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
-                  <span className="w-1 h-1 bg-green-400 rounded-full"></span>
-                  Valid Manipal University email
-                </p>
-              )}
-              {/* Domain options hint */}
-              <p className="text-gray-500 text-xs mt-1">
-                Accepted domains: @manipal.edu or @learner.manipal.edu
-              </p>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
-                Password
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
-                  placeholder="Enter your password"
-                  style={{
-                    focusBorderColor: 'var(--form-primary)',
-                    borderColor: formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : undefined
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
-                  onBlur={(e) => e.target.style.borderColor = formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
-                />
-              </div>
-              {errors.password && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.password}</p>}
-            </div>
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3 font-rajdhani uppercase tracking-wide">
-                Select Role
-              </label>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                {['student', 'faculty'].map((role) => (
-                  <button
-                    key={role}
-                    type="button"
-                    onClick={() => handleInputChange('role', role)}
-                    className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
-                      formData.role === role
-                        ? 'text-white shadow-lg'
-                        : 'border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300'
-                    }`}
-                    style={{
-                      borderColor: formData.role === role ? 'var(--form-primary)' : undefined,
-                      background: formData.role === role ? 'var(--form-glow)' : undefined,
-                      boxShadow: formData.role === role ? '0 0 20px var(--form-glow)' : undefined
-                    }}
-                  >
-                    {role === 'student' ? (
-                      <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
-                    ) : (
-                      <User className="w-5 h-5 sm:w-6 sm:h-6" />
-                    )}
-                    <span className="font-rajdhani font-medium capitalize text-sm sm:text-base">{role}</span>
-                  </button>
-                ))}
-              </div>
-              {errors.role && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.role}</p>}
-            </div>
-
-            {/* Department Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
-                Department
-              </label>
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <select
-                  value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white focus:outline-none transition-all duration-300 appearance-none text-sm sm:text-base"
-                  style={{
-                    focusBorderColor: 'var(--form-primary)',
-                    borderColor: formData.department ? 'var(--form-primary)' : undefined
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
-                  onBlur={(e) => e.target.style.borderColor = formData.department ? 'var(--form-primary)' : '#6b7280'}
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept} className="bg-gray-800">
-                      {dept}
-                    </option>
+            {/* Role Selection - Only show if user exists */}
+            {showPasswordField && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-3 font-rajdhani uppercase tracking-wide">
+                  Select Role
+                </label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  {['student', 'faculty'].map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => handleInputChange('role', role)}
+                      className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+                        formData.role === role
+                          ? 'text-white shadow-lg'
+                          : 'border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300'
+                      }`}
+                      style={{
+                        borderColor: formData.role === role ? 'var(--form-primary)' : undefined,
+                        background: formData.role === role ? 'var(--form-glow)' : undefined,
+                        boxShadow: formData.role === role ? '0 0 20px var(--form-glow)' : undefined
+                      }}
+                    >
+                      {role === 'student' ? (
+                        <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
+                      ) : (
+                        <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                      )}
+                      <span className="font-rajdhani font-medium capitalize text-sm sm:text-base">{role}</span>
+                    </button>
                   ))}
-                </select>
+                </div>
+                {errors.role && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.role}</p>}
               </div>
-              {errors.department && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.department}</p>}
-            </div>
+            )}
 
-            {/* Year Selection (Students Only) */}
-            {formData.role === 'student' && (
+            {/* Department Selection - Only show if user exists */}
+            {showPasswordField && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
+                  Department
+                </label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                  <select
+                    value={formData.department}
+                    onChange={(e) => handleInputChange('department', e.target.value)}
+                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white focus:outline-none transition-all duration-300 appearance-none text-sm sm:text-base"
+                    style={{
+                      focusBorderColor: 'var(--form-primary)',
+                      borderColor: formData.department ? 'var(--form-primary)' : undefined
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
+                    onBlur={(e) => e.target.style.borderColor = formData.department ? 'var(--form-primary)' : '#6b7280'}
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept} className="bg-gray-800">
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.department && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.department}</p>}
+              </div>
+            )}
+
+            {/* Year Selection (Students Only) - Only show if user exists */}
+            {showPasswordField && formData.role === 'student' && (
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
                   Academic Year
@@ -454,7 +468,7 @@ const Login: React.FC = () => {
             {/* Submit Button */}
             <GlitchButton
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !showPasswordField}
               variant="primary"
               size="lg"
               className="w-full"
@@ -464,6 +478,11 @@ const Login: React.FC = () => {
                 <div className="flex items-center justify-center gap-2 sm:gap-3">
                   <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span className="text-sm sm:text-base">Accessing System...</span>
+                </div>
+              ) : !showPasswordField ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Enter Valid Email First</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">

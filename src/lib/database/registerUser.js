@@ -15,10 +15,11 @@ import { supabase } from '../supabaseClient.js'
  * @param {string} userData.role - User role ('student' or 'faculty')
  * @param {string} userData.department - User's department
  * @param {string} [userData.year] - Academic year (optional, for students)
+ * @param {string} [userData.contactNumber] - User's contact number
  * @param {string} [userData.theme] - Preferred theme (optional)
  * @returns {Promise<{data: Object|null, error: Object|null}>}
  */
-export async function registerUser({ email, role, department, year = null, theme = 'blue_neon' }) {
+export async function registerUser({ email, role, department, year = null, contactNumber = null, theme = 'blue_neon' }) {
   try {
     // Generate anonymous ID
     const prefix = role === 'student' ? 'Student' : 'Faculty'
@@ -32,7 +33,8 @@ export async function registerUser({ email, role, department, year = null, theme
       department,
       year: role === 'student' ? year : null,
       anonymous_id: anonymousId,
-      theme
+      theme,
+      contact_number: contactNumber
     }
 
     // Insert user into database
