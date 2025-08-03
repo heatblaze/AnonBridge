@@ -116,7 +116,15 @@ const AnimatedBackground: React.FC = () => {
       // Skip grid and scanning lines for dashboard pages
       if (!isDashboardPage) {
         // Draw cyberpunk grid
-        ctx.strokeStyle = 'rgba(0, 212, 255, 0.08)';
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary') || '#00d4ff';
+        const hexToRgba = (hex: string, alpha: number) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+        
+        ctx.strokeStyle = hexToRgba(primaryColor, 0.08);
         ctx.lineWidth = 1;
         
         const gridSize = 50;
@@ -146,7 +154,15 @@ const AnimatedBackground: React.FC = () => {
         ctx.fillRect(building.x, buildingY, building.width, building.height);
         
         // Building outline
-        ctx.strokeStyle = 'rgba(0, 212, 255, 0.3)';
+        const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary') || '#00d4ff';
+        const hexToRgba = (hex: string, alpha: number) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+        
+        ctx.strokeStyle = hexToRgba(primaryColor, 0.3);
         ctx.lineWidth = 1;
         ctx.strokeRect(building.x, buildingY, building.width, building.height);
         
@@ -164,8 +180,11 @@ const AnimatedBackground: React.FC = () => {
             const windowX = building.x + window.x;
             const windowY = buildingY + window.y;
             
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary') || '#00d4ff';
+            const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-secondary') || '#7c3aed';
+            
             // Window glow
-            ctx.fillStyle = Math.random() > 0.95 ? '#ff4444' : '#00d4ff';
+            ctx.fillStyle = Math.random() > 0.95 ? secondaryColor : primaryColor;
             ctx.fillRect(windowX, windowY, 12, 8);
             
             // Window glow effect
@@ -178,7 +197,8 @@ const AnimatedBackground: React.FC = () => {
 
         // Antenna/details on some buildings
         if (Math.random() > 0.7) {
-          ctx.strokeStyle = '#00d4ff';
+          const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary') || '#00d4ff';
+          ctx.strokeStyle = primaryColor;
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(building.x + building.width / 2, buildingY);
@@ -187,7 +207,8 @@ const AnimatedBackground: React.FC = () => {
           
           // Blinking light on antenna
           if (Math.sin(currentTime * 0.01) > 0) {
-            ctx.fillStyle = '#ff4444';
+            const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-secondary') || '#ff4444';
+            ctx.fillStyle = secondaryColor;
             ctx.beginPath();
             ctx.arc(building.x + building.width / 2, buildingY - 20, 3, 0, Math.PI * 2);
             ctx.fill();
@@ -201,13 +222,21 @@ const AnimatedBackground: React.FC = () => {
         const droneX = (currentTime * 0.05 + i * 200) % (canvas.width + 100);
         const droneY = 100 + Math.sin(currentTime * 0.003 + i) * 30;
         
-        ctx.fillStyle = '#ff4444';
+        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-secondary') || '#ff4444';
+        ctx.fillStyle = secondaryColor;
         ctx.beginPath();
         ctx.arc(droneX, droneY, 2, 0, Math.PI * 2);
         ctx.fill();
         
         // Drone trail
-        ctx.strokeStyle = 'rgba(255, 68, 68, 0.5)';
+        const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-secondary') || '#ff4444';
+        const hexToRgba = (hex: string, alpha: number) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+        ctx.strokeStyle = hexToRgba(secondaryColor, 0.5);
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(droneX - 10, droneY);
@@ -243,7 +272,14 @@ const AnimatedBackground: React.FC = () => {
       });
 
       // Draw holographic elements
-      ctx.strokeStyle = 'rgba(124, 58, 237, 0.4)';
+      const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-accent') || '#06b6d4';
+      const hexToRgba = (hex: string, alpha: number) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      };
+      ctx.strokeStyle = hexToRgba(accentColor, 0.4);
       ctx.lineWidth = 1;
       const holoSize = 100;
       const holoX = canvas.width - 150;

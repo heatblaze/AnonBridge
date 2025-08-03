@@ -30,6 +30,12 @@ const Homepage: React.FC = () => {
     root.style.setProperty('--homepage-secondary', currentThemeColors.secondary);
     root.style.setProperty('--homepage-accent', currentThemeColors.accent);
     root.style.setProperty('--homepage-glow', `${currentThemeColors.primary}80`);
+    
+    // Also update the main theme variables for AnimatedBackground
+    root.style.setProperty('--theme-primary', currentThemeColors.primary);
+    root.style.setProperty('--theme-secondary', currentThemeColors.secondary);
+    root.style.setProperty('--theme-accent', currentThemeColors.accent);
+    root.style.setProperty('--theme-glow', `${currentThemeColors.primary}80`);
   }, [homepageTheme, currentThemeColors]);
 
   const cycleTheme = () => {
