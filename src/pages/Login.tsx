@@ -23,6 +23,7 @@ const Login: React.FC = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [foundUser, setFoundUser] = useState<any>(null);
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [userExists, setUserExists] = useState(false);
 
@@ -136,6 +137,7 @@ const Login: React.FC = () => {
             setShowPasswordField(exists);
             
             if (exists && user) {
+              setFoundUser(user);
               // Pre-fill form with user data
               setFormData(prev => ({
                 ...prev,
@@ -180,14 +182,14 @@ const Login: React.FC = () => {
       // Simulate login authentication (replace with actual authentication)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Create user object based on form data
+      // Create user object using actual database user data
       const user = {
-        id: `user_${Date.now()}`,
+        id: foundUser.id,
         email: formData.email,
         role: formData.role as 'student' | 'faculty',
         department: formData.department,
         year: formData.year,
-        anonymousId: generateAnonymousId(formData.role)
+        anonymousId: foundUser.anonymous_id
       };
 
       setUser(user);
