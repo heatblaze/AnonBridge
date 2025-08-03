@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Zap, Users, ArrowRight, Terminal, Lock, Wifi, Video, Monitor } from 'lucide-react';
+import { Shield, Zap, Users, ArrowRight, Terminal, Lock, Wifi, Video, Monitor, Palette } from 'lucide-react';
 import GlitchButton from '../components/GlitchButton';
 import AnimatedBackground from '../components/AnimatedBackground';
 
@@ -9,8 +9,34 @@ const Homepage: React.FC = () => {
   const [useVideoBackground, setUseVideoBackground] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [homepageTheme, setHomepageTheme] = useState('cyan');
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const homepageThemes = [
+    { id: 'cyan', name: 'Cyan', primary: '#00d4ff', secondary: '#7c3aed', accent: '#06b6d4' },
+    { id: 'red', name: 'Red', primary: '#ff4444', secondary: '#ff8800', accent: '#ff6b35' },
+    { id: 'green', name: 'Green', primary: '#10b981', secondary: '#059669', accent: '#34d399' },
+    { id: 'purple', name: 'Purple', primary: '#a855f7', secondary: '#ec4899', accent: '#8b5cf6' },
+    { id: 'amber', name: 'Amber', primary: '#f59e0b', secondary: '#d97706', accent: '#fbbf24' },
+    { id: 'teal', name: 'Teal', primary: '#14b8a6', secondary: '#0891b2', accent: '#22d3ee' }
+  ];
+
+  const currentThemeColors = homepageThemes.find(t => t.id === homepageTheme) || homepageThemes[0];
+
+  // Apply homepage theme colors
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--homepage-primary', currentThemeColors.primary);
+    root.style.setProperty('--homepage-secondary', currentThemeColors.secondary);
+    root.style.setProperty('--homepage-accent', currentThemeColors.accent);
+    root.style.setProperty('--homepage-glow', `${currentThemeColors.primary}80`);
+  }, [homepageTheme, currentThemeColors]);
+
+  const cycleTheme = () => {
+    const currentIndex = homepageThemes.findIndex(t => t.id === homepageTheme);
+    const nextIndex = (currentIndex + 1) % homepageThemes.length;
+    setHomepageTheme(homepageThemes[nextIndex].id);
+  };
   const features = [
     {
       icon: Shield,
@@ -223,6 +249,20 @@ const Homepage: React.FC = () => {
             >
               Admin
             </GlitchButton>
+            <button
+              onClick={cycleTheme}
+              className="p-2 sm:p-3 rounded-lg border border-gray-600/50 hover:border-gray-500/50 bg-black/70 backdrop-blur-md transition-all duration-300 hover:scale-105 group"
+              title={`Current: ${currentThemeColors.name} Theme - Click to change`}
+              style={{
+                borderColor: `${currentThemeColors.primary}50`,
+                boxShadow: `0 0 10px ${currentThemeColors.primary}20`
+              }}
+            >
+              <Palette 
+                className="w-4 h-4 sm:w-5 sm:h-5 transition-colors duration-300 group-hover:rotate-12" 
+                style={{ color: currentThemeColors.primary }}
+              />
+            </button>
             <GlitchButton
               variant="outline"
               size="sm"
@@ -271,7 +311,12 @@ const Homepage: React.FC = () => {
       <div className="relative z-30 min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-8 sm:pt-0">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="font-orbitron font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl mb-4 sm:mb-6 neon-glow text-flicker">
-            <span className="bg-gradient-to-r from-cyan-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+            <span 
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage: `linear-gradient(to right, ${currentThemeColors.primary}, ${currentThemeColors.secondary}, ${currentThemeColors.primary})`
+              }}
+            >
               AnonBridge
             </span>
           </h1>
@@ -292,6 +337,11 @@ const Homepage: React.FC = () => {
               size="lg"
               glitchIntensity="medium"
               className="w-full sm:w-auto"
+              style={{
+                background: `linear-gradient(45deg, ${currentThemeColors.primary}, ${currentThemeColors.secondary})`,
+                borderColor: currentThemeColors.primary,
+                boxShadow: `0 0 20px ${currentThemeColors.primary}40`
+              }}
             >
               <Users className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
               Student Access
@@ -304,6 +354,11 @@ const Homepage: React.FC = () => {
               size="lg"
               glitchIntensity="medium"
               className="w-full sm:w-auto"
+              style={{
+                background: `linear-gradient(45deg, ${currentThemeColors.secondary}, ${currentThemeColors.accent})`,
+                borderColor: currentThemeColors.secondary,
+                boxShadow: `0 0 20px ${currentThemeColors.secondary}40`
+              }}
             >
               <Shield className="mr-2 w-4 h-4 sm:w-5 sm:h-5" />
               Faculty Portal
@@ -316,13 +371,35 @@ const Homepage: React.FC = () => {
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="bg-gray-900/70 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-3 sm:p-4 text-center hover:border-cyan-500/60 transition-all duration-300 hover:transform hover:scale-105"
+                className="bg-gray-900/70 backdrop-blur-sm border rounded-lg p-4 sm:p-6 text-center transition-all duration-300 hover:transform hover:scale-105"
+                style={{
+                  borderColor: `${currentThemeColors.primary}30`
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}60`}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}30`}
+                style={{
+                  borderColor: `${currentThemeColors.primary}30`,
+                  '--hover-border': `${currentThemeColors.primary}60`
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}60`}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = `${currentThemeColors.primary}30`}
               >
-                <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 text-cyan-400" />
+                <feature.icon 
+                  className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4" 
+                  style={{ color: currentThemeColors.primary }}
+                />
+                  className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2" 
+                  style={{ color: currentThemeColors.primary }}
+                />
                 <div className="font-orbitron text-lg sm:text-2xl font-bold text-cyan-300 mb-1">
                   {stat.value}
                 </div>
-                <div className="text-gray-300 text-xs sm:text-sm">{stat.label}</div>
+                <div 
+                  className="text-xs sm:text-sm"
+                  style={{ color: currentThemeColors.accent }}
+                >
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
