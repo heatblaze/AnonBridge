@@ -300,6 +300,40 @@ const Login: React.FC = () => {
             </p>
           </div>
 
+          {/* Role Selection - Always visible */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-3 font-rajdhani uppercase tracking-wide">
+              Select Role
+            </label>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {['student', 'faculty'].map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => handleInputChange('role', role)}
+                  className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+                    formData.role === role
+                      ? 'text-white shadow-lg'
+                      : 'border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300'
+                  }`}
+                  style={{
+                    borderColor: formData.role === role ? 'var(--form-primary)' : undefined,
+                    background: formData.role === role ? 'var(--form-glow)' : undefined,
+                    boxShadow: formData.role === role ? '0 0 20px var(--form-glow)' : undefined
+                  }}
+                >
+                  {role === 'student' ? (
+                    <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
+                  ) : (
+                    <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                  )}
+                  <span className="font-rajdhani font-medium capitalize text-sm sm:text-base">{role}</span>
+                </button>
+              ))}
+            </div>
+            {errors.role && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.role}</p>}
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Email Field */}
             <div>
@@ -369,42 +403,6 @@ const Login: React.FC = () => {
               </div>
             )}
 
-            {/* Role Selection - Only show if user exists */}
-            {showPasswordField && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3 font-rajdhani uppercase tracking-wide">
-                  Select Role
-                </label>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  {['student', 'faculty'].map((role) => (
-                    <button
-                      key={role}
-                      type="button"
-                      onClick={() => handleInputChange('role', role)}
-                      className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
-                        formData.role === role
-                          ? 'text-white shadow-lg'
-                          : 'border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300'
-                      }`}
-                      style={{
-                        borderColor: formData.role === role ? 'var(--form-primary)' : undefined,
-                        background: formData.role === role ? 'var(--form-glow)' : undefined,
-                        boxShadow: formData.role === role ? '0 0 20px var(--form-glow)' : undefined
-                      }}
-                    >
-                      {role === 'student' ? (
-                        <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
-                      ) : (
-                        <User className="w-5 h-5 sm:w-6 sm:h-6" />
-                      )}
-                      <span className="font-rajdhani font-medium capitalize text-sm sm:text-base">{role}</span>
-                    </button>
-                  ))}
-                </div>
-                {errors.role && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.role}</p>}
-              </div>
-            )}
-
             {/* Department Selection - Only show if user exists */}
             {showPasswordField && (
               <div>
@@ -470,7 +468,7 @@ const Login: React.FC = () => {
             {/* Submit Button */}
             <GlitchButton
               type="submit"
-              disabled={isLoading || !showPasswordField}
+              disabled={isLoading || !showPasswordField || !formData.role}
               variant="primary"
               size="lg"
               className="w-full"
@@ -481,10 +479,12 @@ const Login: React.FC = () => {
                   <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span className="text-sm sm:text-base">Accessing System...</span>
                 </div>
-              ) : !showPasswordField ? (
+              ) : !showPasswordField || !formData.role ? (
                 <div className="flex items-center justify-center gap-2">
                   <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-sm sm:text-base">Enter Valid Email First</span>
+                  <span className="text-sm sm:text-base">
+                    {!formData.role ? 'Select Role & Enter Email' : 'Enter Valid Email First'}
+                  </span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">
