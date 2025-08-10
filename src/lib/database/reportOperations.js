@@ -1,8 +1,7 @@
 /*
- * Report Issue Helper
+ * Report Operations
  * 
- * Handles issue reporting functionality for the AnonBridge platform.
- * Stores reports in the reports table for admin review.
+ * Handles issue reporting and moderation functionality.
  */
 
 import { supabase } from '../supabaseClient.js'
@@ -28,43 +27,50 @@ export async function reportIssue({
   userRole 
 }) {
   try {
+    // Get the reporter's user ID
+    const { data: reporter, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('anonymous_id', reportedBy)
+      .single();
+
+    if (userError) {
+      console.error('Error finding reporter:', userError);
+      // Continue with null reported_by if user not found
+    }
+
     const reportData = {
       message_id: messageId || `${userRole}_report_${Date.now()}`,
       reason,
-      reported_by: reportedBy,
-      timestamp: new Date().toISOString(),
-      // Store additional context in a JSON field if needed
-      metadata: {
-        comment,
-        threadId,
-        userRole,
-        reportType: messageId ? 'message_report' : 'general_issue'
-      }
-    }
+      comment,
+      reported_by: reporter?.id || null,
+      chat_id: threadId,
+      timestamp: new Date().toISOString()
+    };
 
     const { data, error } = await supabase
       .from('reports')
       .insert([reportData])
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error submitting report:', error)
-      return { data: null, error }
+      console.error('Error submitting report:', error);
+      return { data: null, error };
     }
 
-    console.log('Report submitted successfully:', data)
-    return { data, error: null }
+    console.log('Report submitted successfully:', data);
+    return { data, error: null };
 
   } catch (err) {
-    console.error('Unexpected error in reportIssue:', err)
+    console.error('Unexpected error in reportIssue:', err);
     return { 
       data: null, 
       error: { 
         message: 'An unexpected error occurred while submitting the report',
         details: err.message 
       }
-    }
+    };
   }
 }
 
@@ -72,10 +78,6 @@ export async function reportIssue({
  * Get all reports (admin only)
  * 
  * @param {Object} [options] - Query options
- * @param {number} [options.limit] - Maximum number of reports to return
- * @param {number} [options.offset] - Number of reports to skip
- * @param {string} [options.orderBy] - Order by field
- * @param {boolean} [options.ascending] - Sort order
  * @returns {Promise<{data: Array|null, error: Object|null}>}
  */
 export async function getAllReports(options = {}) {
@@ -85,32 +87,36 @@ export async function getAllReports(options = {}) {
       offset = 0,
       orderBy = 'timestamp',
       ascending = false
-    } = options
+    } = options;
 
     let query = supabase
       .from('reports')
-      .select('*')
+      .select(`
+        *,
+        reporter:reported_by(anonymous_id, role),
+        chat:chat_id(id, subject, department)
+      `)
       .order(orderBy, { ascending })
-      .range(offset, offset + limit - 1)
+      .range(offset, offset + limit - 1);
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching reports:', error)
-      return { data: null, error }
+      console.error('Error fetching reports:', error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
 
   } catch (err) {
-    console.error('Unexpected error in getAllReports:', err)
+    console.error('Unexpected error in getAllReports:', err);
     return { 
       data: null, 
       error: { 
         message: 'An unexpected error occurred while fetching reports',
         details: err.message 
       }
-    }
+    };
   }
 }
 
@@ -132,25 +138,23 @@ export async function resolveReport(reportId, resolvedBy) {
       })
       .eq('id', reportId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error resolving report:', error)
-      return { data: null, error }
+      console.error('Error resolving report:', error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
 
   } catch (err) {
-    console.error('Unexpected error in resolveReport:', err)
+    console.error('Unexpected error in resolveReport:', err);
     return { 
       data: null, 
       error: { 
         message: 'An unexpected error occurred while resolving the report',
         details: err.message 
       }
-    }
+    };
   }
 }
-
-export default reportIssue

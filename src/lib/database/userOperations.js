@@ -1,8 +1,7 @@
 /*
- * Register User Helper
+ * User Operations
  * 
- * Creates a new user record in the users table with the provided information.
- * Generates an anonymous ID and handles role-specific data.
+ * Handles user registration, authentication, and profile management.
  */
 
 import { supabase } from '../supabaseClient.js'
@@ -19,48 +18,78 @@ import { supabase } from '../supabaseClient.js'
  * @param {string} [userData.theme] - Preferred theme (optional)
  * @returns {Promise<{data: Object|null, error: Object|null}>}
  */
-export async function registerUser({ email, role, department, year = null, contactNumber = null, theme = 'blue_neon' }) {
+export async function registerUser({ 
+  email, 
+  role, 
+  department, 
+  year = null, 
+  contactNumber = null, 
+  theme = 'blue_neon' 
+}) {
   try {
-    // Generate anonymous ID
-    const prefix = role === 'student' ? 'Student' : 'Faculty'
-    const randomNum = Math.floor(Math.random() * 899) + 100
-    const anonymousId = `${prefix}#${randomNum}`
+    // Validate email domain
+    const emailLower = email.toLowerCase().trim();
+    if (!emailLower.endsWith('@manipal.edu') && !emailLower.endsWith('@learner.manipal.edu')) {
+      return {
+        data: null,
+        error: { message: 'Only Manipal University email addresses are allowed' }
+      };
+    }
 
-    // Prepare user data - only include columns that exist in the schema
+    // Generate anonymous ID
+    const prefix = role === 'student' ? 'Student' : 'Faculty';
+    const randomNum = Math.floor(Math.random() * 899) + 100;
+    const anonymousId = `${prefix}#${randomNum}`;
+
+    // Check if anonymous ID already exists (very rare, but possible)
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('anonymous_id')
+      .eq('anonymous_id', anonymousId)
+      .single();
+
+    if (existingUser) {
+      // Generate a new one if collision occurs
+      const newRandomNum = Math.floor(Math.random() * 899) + 100;
+      const newAnonymousId = `${prefix}#${newRandomNum}`;
+      anonymousId = newAnonymousId;
+    }
+
+    // Prepare user data
     const userData = {
-      email: email.toLowerCase().trim(),
+      email: emailLower,
       role,
       department,
       year: role === 'student' ? year : null,
       anonymous_id: anonymousId,
       theme,
       contact_number: contactNumber
-    }
+    };
 
     // Insert user into database
     const { data, error } = await supabase
       .from('users')
       .insert([userData])
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error registering user:', error)
-      return { data: null, error }
+      console.error('Error registering user:', error);
+      return { data: null, error };
     }
 
-    console.log('User registered successfully:', data)
-    return { data, error: null }
+    console.log('User registered successfully:', data);
+    return { data, error: null };
 
   } catch (err) {
-    console.error('Unexpected error in registerUser:', err)
+    console.error('Unexpected error in registerUser:', err);
     return { 
       data: null, 
       error: { 
         message: 'An unexpected error occurred during registration',
         details: err.message 
       }
-    }
+    };
   }
 }
 
@@ -76,21 +105,21 @@ export async function checkUserExists(email) {
       .from('users')
       .select('*')
       .eq('email', email.toLowerCase().trim())
-      .maybeSingle()
+      .maybeSingle();
 
     if (error) {
-      console.error('Error checking user existence:', error)
-      return { exists: false, user: null, error }
+      console.error('Error checking user existence:', error);
+      return { exists: false, user: null, error };
     }
 
     return { 
       exists: !!data, 
       user: data || null, 
       error: null 
-    }
+    };
 
   } catch (err) {
-    console.error('Unexpected error in checkUserExists:', err)
+    console.error('Unexpected error in checkUserExists:', err);
     return { 
       exists: false, 
       user: null, 
@@ -98,8 +127,6 @@ export async function checkUserExists(email) {
         message: 'An unexpected error occurred while checking user',
         details: err.message 
       }
-    }
+    };
   }
 }
-
-export default registerUser

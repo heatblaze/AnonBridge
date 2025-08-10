@@ -1,17 +1,13 @@
 /*
- * Append Message Helper
+ * Message Operations
  * 
- * Adds a new message to an existing chat thread by updating the messages JSONB array.
- * Also updates chat metadata like timestamps.
+ * Handles message sending, retrieval, and status management.
  */
 
 import { supabase } from '../supabaseClient.js'
 
 /**
  * Helper function to check if a string is a valid UUID
- * 
- * @param {string} str - String to validate
- * @returns {boolean} True if valid UUID, false otherwise
  */
 function isValidUUID(str) {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -66,60 +62,61 @@ export async function appendMessage({
       type,
       timestamp: timestamp || new Date().toISOString(),
       status: 'sent'
-    }
+    };
 
     // First, get the current chat to access existing messages
     const { data: currentChat, error: fetchError } = await supabase
       .from('chats')
       .select('messages')
       .eq('id', chatId)
-      .single()
+      .single();
 
     if (fetchError) {
-      console.error('Error fetching current chat:', fetchError)
-      return { data: null, error: fetchError }
+      console.error('Error fetching current chat:', fetchError);
+      return { data: null, error: fetchError };
     }
 
     // Append new message to existing messages array
-    const updatedMessages = [...(currentChat.messages || []), newMessage]
+    const updatedMessages = [...(currentChat.messages || []), newMessage];
 
     // Update chat with new message
     const { data, error } = await supabase
       .from('chats')
       .update({
-        messages: updatedMessages
+        messages: updatedMessages,
+        updated_at: new Date().toISOString()
       })
       .eq('id', chatId)
       .select(`
         *,
-        student_id(*),
-        faculty_id(*)
+        student:student_id(id, anonymous_id, department, year),
+        faculty:faculty_id(id, anonymous_id, department)
       `)
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error appending message:', error)
-      return { data: null, error }
+      console.error('Error appending message:', error);
+      return { data: null, error };
     }
 
-    console.log('Message appended successfully:', newMessage)
+    console.log('Message appended successfully:', newMessage);
     return { 
       data: { 
         chat: data, 
         message: newMessage 
       }, 
       error: null 
-    }
+    };
 
   } catch (err) {
-    console.error('Unexpected error in appendMessage:', err)
+    console.error('Unexpected error in appendMessage:', err);
     return { 
       data: null, 
       error: { 
         message: 'An unexpected error occurred while sending message',
         details: err.message 
       }
-    }
+    };
   }
 }
 
@@ -144,35 +141,35 @@ export async function getChatMessages(chatId, limit = 50, offset = 0) {
       .from('chats')
       .select('messages')
       .eq('id', chatId)
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error fetching chat messages:', error)
-      return { data: null, error }
+      console.error('Error fetching chat messages:', error);
+      return { data: null, error };
     }
 
     // Extract and paginate messages
-    const messages = data.messages || []
+    const messages = data.messages || [];
     const paginatedMessages = messages
       .slice(offset, offset + limit)
-      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-    return { data: paginatedMessages, error: null }
+    return { data: paginatedMessages, error: null };
 
   } catch (err) {
-    console.error('Unexpected error in getChatMessages:', err)
+    console.error('Unexpected error in getChatMessages:', err);
     return { 
       data: null, 
       error: { 
         message: 'An unexpected error occurred while fetching messages',
         details: err.message 
       }
-    }
+    };
   }
 }
 
 /**
- * Mark messages as read for a specific user (placeholder for future implementation)
+ * Mark messages as read for a specific user
  * 
  * @param {string} chatId - Chat thread ID
  * @param {string} userRole - User role ('student' or 'faculty')
@@ -187,18 +184,16 @@ export async function markMessagesAsRead(chatId, userRole) {
 
     // For now, just return success since we don't have unread count columns
     // This can be implemented when you add those columns to your schema
-    return { data: { success: true }, error: null }
+    return { data: { success: true }, error: null };
 
   } catch (err) {
-    console.error('Unexpected error in markMessagesAsRead:', err)
+    console.error('Unexpected error in markMessagesAsRead:', err);
     return { 
       data: null, 
       error: { 
         message: 'An unexpected error occurred while marking messages as read',
         details: err.message 
       }
-    }
+    };
   }
 }
-
-export default appendMessage
