@@ -14,6 +14,8 @@ const Register: React.FC = () => {
   const [formData, setFormData] = useState({
     email: '',
     contactNumber: '',
+    password: '',
+    confirmPassword: '',
     role: searchParams.get('role') || '',
     department: '',
     year: ''
@@ -113,6 +115,29 @@ const Register: React.FC = () => {
     return '';
   };
 
+  const validatePassword = (password: string) => {
+    if (!password.trim()) {
+      return 'Password is required';
+    }
+    
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    
+    return '';
+  };
+
+  const validateConfirmPassword = (password: string, confirmPassword: string) => {
+    if (!confirmPassword.trim()) {
+      return 'Please confirm your password';
+    }
+    
+    if (password !== confirmPassword) {
+      return 'Passwords do not match';
+    }
+    
+    return '';
+  };
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -124,6 +149,16 @@ const Register: React.FC = () => {
     const contactError = validateContactNumber(formData.contactNumber);
     if (contactError) {
       newErrors.contactNumber = contactError;
+    }
+
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
+    }
+
+    const confirmPasswordError = validateConfirmPassword(formData.password, formData.confirmPassword);
+    if (confirmPasswordError) {
+      newErrors.confirmPassword = confirmPasswordError;
     }
 
     if (!formData.role) {
@@ -178,6 +213,7 @@ const Register: React.FC = () => {
         department: formData.department,
         year: formData.year,
         contactNumber: formData.contactNumber.replace(/\D/g, ''),
+        password: formData.password,
         theme: formData.role === 'student' ? 'blue_neon' : 'red_alert'
       });
 
@@ -220,6 +256,19 @@ const Register: React.FC = () => {
       }
     }
 
+    if (field === 'password' && value.trim()) {
+      const passwordError = validatePassword(value);
+      if (passwordError) {
+        setErrors(prev => ({ ...prev, password: passwordError }));
+      }
+    }
+
+    if (field === 'confirmPassword' && value.trim()) {
+      const confirmPasswordError = validateConfirmPassword(formData.password, value);
+      if (confirmPasswordError) {
+        setErrors(prev => ({ ...prev, confirmPassword: confirmPasswordError }));
+      }
+    }
     if (field === 'contactNumber' && value.trim()) {
       const contactError = validateContactNumber(value);
       if (contactError) {
@@ -378,6 +427,77 @@ const Register: React.FC = () => {
               <p className="text-gray-500 text-xs mt-1">
                 Enter 10-digit Indian mobile number
               </p>
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
+                Password *
+              </label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
+                  placeholder="Enter secure password"
+                  required
+                  style={{
+                    focusBorderColor: 'var(--form-primary)',
+                    borderColor: formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : undefined
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
+                  onBlur={(e) => e.target.style.borderColor = formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
+                />
+              </div>
+              {errors.password && <p className="text-red-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                {errors.password}
+              </p>}
+              {!errors.password && formData.password && formData.password.length >= 6 && (
+                <p className="text-green-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-green-400 rounded-full"></span>
+                  Password meets requirements
+                </p>
+              )}
+              <p className="text-gray-500 text-xs mt-1">
+                Minimum 6 characters required
+              </p>
+            </div>
+
+            {/* Confirm Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
+                Confirm Password *
+              </label>
+              <div className="relative">
+                <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <input
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
+                  placeholder="Confirm your password"
+                  required
+                  style={{
+                    focusBorderColor: 'var(--form-primary)',
+                    borderColor: formData.confirmPassword ? (errors.confirmPassword ? '#ef4444' : 'var(--form-primary)') : undefined
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
+                  onBlur={(e) => e.target.style.borderColor = formData.confirmPassword ? (errors.confirmPassword ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
+                />
+              </div>
+              {errors.confirmPassword && <p className="text-red-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                {errors.confirmPassword}
+              </p>}
+              {!errors.confirmPassword && formData.confirmPassword && formData.password === formData.confirmPassword && (
+                <p className="text-green-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-green-400 rounded-full"></span>
+                  Passwords match
+                </p>
+              )}
             </div>
 
             {/* Role Selection */}

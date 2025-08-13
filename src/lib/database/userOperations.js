@@ -24,6 +24,7 @@ export async function registerUser({
   department, 
   year = null, 
   contactNumber = null, 
+  password,
   theme = 'blue_neon' 
 }) {
   try {
@@ -62,7 +63,8 @@ export async function registerUser({
       year: role === 'student' ? year : null,
       anonymous_id: anonymousId,
       theme,
-      contact_number: contactNumber
+      contact_number: contactNumber,
+      password: password
     };
 
     // Insert user into database
