@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, User, GraduationCap, Building, ArrowRight, Shield, ArrowLeft, Key } from 'lucide-react';
+import { Mail, User, GraduationCap, Building, ArrowRight, Shield, ArrowLeft } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GlitchButton from '../components/GlitchButton';
 import AnimatedBackground from '../components/AnimatedBackground';
-import { checkUserExists, authenticateUser } from '../lib/database';
+import { checkUserExists } from '../lib/database';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
