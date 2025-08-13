@@ -6,7 +6,7 @@
  */
 
 // User management
-export { registerUser, checkUserExists } from './userOperations.js'
+export { registerUser, checkUserExists, authenticateUser } from './userOperations.js'
 
 // Chat management
 export { startNewChat, getAvailableFaculty } from './chatOperations.js'

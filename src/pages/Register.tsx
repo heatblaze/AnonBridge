@@ -190,6 +190,7 @@ const Register: React.FC = () => {
       // Register the user
       const { data: newUser, error: registerError } = await registerUser({
         email: formData.email,
+        password: formData.password,
         role: formData.role as 'student' | 'faculty',
         department: formData.department,
         year: formData.year,

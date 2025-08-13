@@ -5,7 +5,7 @@ import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
 import GlitchButton from '../components/GlitchButton';
 import AnimatedBackground from '../components/AnimatedBackground';
-import { checkUserExists } from '../lib/database';
+import { checkUserExists, authenticateUser } from '../lib/database';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -179,17 +179,29 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate login authentication (replace with actual authentication)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Authenticate with Supabase
+      const { data: authResult, error: authError } = await authenticateUser(formData.email, formData.password);
       
-      // Create user object using actual database user data
+      if (authError) {
+        setErrors({ submit: authError.message || 'Login failed. Please check your credentials.' });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!authResult || !authResult.profile) {
+        setErrors({ submit: 'Login failed. User profile not found.' });
+        setIsLoading(false);
+        return;
+      }
+
+      // Create user object using authenticated user data
       const user = {
-        id: foundUser.id,
+        id: authResult.profile.id,
         email: formData.email,
-        role: formData.role as 'student' | 'faculty',
-        department: formData.department,
-        year: formData.year,
-        anonymousId: foundUser.anonymous_id
+        role: authResult.profile.role as 'student' | 'faculty',
+        department: authResult.profile.department,
+        year: authResult.profile.year,
+        anonymousId: authResult.profile.anonymous_id
       };
 
       setUser(user);
