@@ -15,7 +15,6 @@ const Login: React.FC = () => {
   
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
     role: searchParams.get('role') || '',
     department: '',
     year: ''
@@ -23,9 +22,6 @@ const Login: React.FC = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [foundUser, setFoundUser] = useState<any>(null);
-  const [showPasswordField, setShowPasswordField] = useState(false);
-  const [userExists, setUserExists] = useState(false);
 
   const departments = [
     'Computer Science Engineering',
@@ -87,13 +83,6 @@ const Login: React.FC = () => {
     return '';
   };
 
-  const validatePassword = (password: string) => {
-    if (!password) {
-      return 'Password is required';
-    }
-    return '';
-  };
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -102,63 +91,21 @@ const Login: React.FC = () => {
       newErrors.email = emailError;
     }
 
-    if (showPasswordField) {
-      const passwordError = validatePassword(formData.password);
-      if (passwordError) {
-        newErrors.password = passwordError;
-      }
+    if (!formData.role) {
+      newErrors.role = 'Please select your role';
+    }
 
-      if (!formData.role) {
-        newErrors.role = 'Please select your role';
-      }
+    if (!formData.department) {
+      newErrors.department = 'Please select your department';
+    }
 
-      if (!formData.department) {
-        newErrors.department = 'Please select your department';
-      }
-
-      if (formData.role === 'student' && !formData.year) {
-        newErrors.year = 'Please select your year';
-      }
+    if (formData.role === 'student' && !formData.year) {
+      newErrors.year = 'Please select your year';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  // Check if user exists when email changes
-  useEffect(() => {
-    const checkUser = async () => {
-      if (formData.email && !validateEmail(formData.email)) {
-        try {
-          const { exists, user, error } = await checkUserExists(formData.email);
-          
-          if (!error) {
-            setUserExists(exists);
-            setShowPasswordField(exists);
-            
-            if (exists && user) {
-              setFoundUser(user);
-              // Pre-fill form with user data
-              setFormData(prev => ({
-                ...prev,
-                role: user.role || prev.role,
-                department: user.department || prev.department,
-                year: user.year || prev.year
-              }));
-            }
-          }
-        } catch (error) {
-          console.error('Error checking user:', error);
-        }
-      } else {
-        setUserExists(false);
-        setShowPasswordField(false);
-      }
-    };
-
-    const timeoutId = setTimeout(checkUser, 500); // Debounce
-    return () => clearTimeout(timeoutId);
-  }, [formData.email]);
 
   const generateAnonymousId = (role: string) => {
     const prefix = role === 'student' ? 'Student' : 'Faculty';
@@ -171,53 +118,48 @@ const Login: React.FC = () => {
     
     if (!validateForm()) return;
 
-    if (!userExists) {
-      setErrors({ email: 'No account found with this email. Please register first.' });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Authenticate with Supabase
-      const { data: authResult, error: authError } = await authenticateUser(formData.email, formData.password);
+      // Check if user exists
+      const { exists, user, error: checkError } = await checkUserExists(formData.email);
       
-      if (authError) {
-        setErrors({ submit: authError.message || 'Login failed. Please check your credentials.' });
+      if (checkError) {
+        setErrors({ submit: 'Error checking user existence. Please try again.' });
         setIsLoading(false);
         return;
       }
 
-      if (!authResult || !authResult.profile) {
-        setErrors({ submit: 'Login failed. User profile not found.' });
+      if (!exists) {
+        setErrors({ email: 'No account found with this email. Please register first.' });
         setIsLoading(false);
         return;
       }
 
-      // Create user object using authenticated user data
-      const user = {
-        id: authResult.profile.id,
+      // Create user object
+      const userObj = {
+        id: user.id,
         email: formData.email,
-        role: authResult.profile.role as 'student' | 'faculty',
-        department: authResult.profile.department,
-        year: authResult.profile.year,
-        anonymousId: authResult.profile.anonymous_id
+        role: user.role as 'student' | 'faculty',
+        department: user.department,
+        year: user.year,
+        anonymousId: user.anonymous_id
       };
 
-      setUser(user);
+      setUser(userObj);
 
       // Set theme based on role
-      if (user.role === 'student') {
+      if (userObj.role === 'student') {
         setCurrentTheme('blue_neon');
       } else {
         setCurrentTheme('red_alert');
       }
 
       // Navigate to appropriate dashboard
-      navigate(user.role === 'student' ? '/student' : '/faculty');
+      navigate(userObj.role === 'student' ? '/student' : '/faculty');
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ submit: 'Login failed. Please check your credentials and try again.' });
+      setErrors({ submit: 'Login failed. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -312,40 +254,6 @@ const Login: React.FC = () => {
             </p>
           </div>
 
-          {/* Role Selection - Always visible */}
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3 font-rajdhani uppercase tracking-wide">
-              Select Role
-            </label>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              {['student', 'faculty'].map((role) => (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => handleInputChange('role', role)}
-                  className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
-                    formData.role === role
-                      ? 'text-white shadow-lg'
-                      : 'border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300'
-                  }`}
-                  style={{
-                    borderColor: formData.role === role ? 'var(--form-primary)' : undefined,
-                    background: formData.role === role ? 'var(--form-glow)' : undefined,
-                    boxShadow: formData.role === role ? '0 0 20px var(--form-glow)' : undefined
-                  }}
-                >
-                  {role === 'student' ? (
-                    <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
-                  ) : (
-                    <User className="w-5 h-5 sm:w-6 sm:h-6" />
-                  )}
-                  <span className="font-rajdhani font-medium capitalize text-sm sm:text-base">{role}</span>
-                </button>
-              ))}
-            </div>
-            {errors.role && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.role}</p>}
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Email Field */}
             <div>
@@ -372,16 +280,10 @@ const Login: React.FC = () => {
                 <span className="w-1 h-1 bg-red-400 rounded-full"></span>
                 {errors.email}
               </p>}
-              {!errors.email && formData.email && isValidManipalEmail(formData.email) && userExists && (
+              {!errors.email && formData.email && isValidManipalEmail(formData.email) && (
                 <p className="text-green-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
                   <span className="w-1 h-1 bg-green-400 rounded-full"></span>
-                  Account found - please enter your password
-                </p>
-              )}
-              {!errors.email && formData.email && isValidManipalEmail(formData.email) && !userExists && (
-                <p className="text-yellow-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
-                  <span className="w-1 h-1 bg-yellow-400 rounded-full"></span>
-                  No account found with this email
+                  Valid Manipal University email
                 </p>
               )}
               <p className="text-gray-500 text-xs mt-1">
@@ -389,68 +291,75 @@ const Login: React.FC = () => {
               </p>
             </div>
 
-            {/* Password Field - Only show if user exists */}
-            {showPasswordField && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
-                  Password
-                </label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
-                    placeholder="Enter your password"
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-3 font-rajdhani uppercase tracking-wide">
+                Select Role *
+              </label>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                {['student', 'faculty'].map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => handleInputChange('role', role)}
+                    className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+                      formData.role === role
+                        ? 'text-white shadow-lg'
+                        : 'border-gray-600 hover:border-gray-500 text-gray-400 hover:text-gray-300'
+                    }`}
                     style={{
-                      focusBorderColor: 'var(--form-primary)',
-                      borderColor: formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : undefined
+                      borderColor: formData.role === role ? 'var(--form-primary)' : undefined,
+                      background: formData.role === role ? 'var(--form-glow)' : undefined,
+                      boxShadow: formData.role === role ? '0 0 20px var(--form-glow)' : undefined
                     }}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
-                    onBlur={(e) => e.target.style.borderColor = formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
-                  />
-                </div>
-                {errors.password && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.password}</p>}
-              </div>
-            )}
-
-            {/* Department Selection - Only show if user exists */}
-            {showPasswordField && (
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
-                  Department
-                </label>
-                <div className="relative">
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                  <select
-                    value={formData.department}
-                    onChange={(e) => handleInputChange('department', e.target.value)}
-                    className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white focus:outline-none transition-all duration-300 appearance-none text-sm sm:text-base"
-                    style={{
-                      focusBorderColor: 'var(--form-primary)',
-                      borderColor: formData.department ? 'var(--form-primary)' : undefined
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
-                    onBlur={(e) => e.target.style.borderColor = formData.department ? 'var(--form-primary)' : '#6b7280'}
                   >
-                    <option value="">Select Department</option>
-                    {departments.map((dept) => (
-                      <option key={dept} value={dept} className="bg-gray-800">
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {errors.department && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.department}</p>}
+                    {role === 'student' ? (
+                      <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
+                    ) : (
+                      <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                    )}
+                    <span className="font-rajdhani font-medium capitalize text-sm sm:text-base">{role}</span>
+                  </button>
+                ))}
               </div>
-            )}
+              {errors.role && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.role}</p>}
+            </div>
 
-            {/* Year Selection (Students Only) - Only show if user exists */}
-            {showPasswordField && formData.role === 'student' && (
+            {/* Department Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
+                Department *
+              </label>
+              <div className="relative">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <select
+                  value={formData.department}
+                  onChange={(e) => handleInputChange('department', e.target.value)}
+                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white focus:outline-none transition-all duration-300 appearance-none text-sm sm:text-base"
+                  required
+                  style={{
+                    focusBorderColor: 'var(--form-primary)',
+                    borderColor: formData.department ? 'var(--form-primary)' : undefined
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
+                  onBlur={(e) => e.target.style.borderColor = formData.department ? 'var(--form-primary)' : '#6b7280'}
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept} className="bg-gray-800">
+                      {dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.department && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.department}</p>}
+            </div>
+
+            {/* Year Selection (Students Only) */}
+            {formData.role === 'student' && (
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
-                  Academic Year
+                  Academic Year *
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {years.map((year) => (
@@ -480,7 +389,7 @@ const Login: React.FC = () => {
             {/* Submit Button */}
             <GlitchButton
               type="submit"
-              disabled={isLoading || !showPasswordField || !formData.role}
+              disabled={isLoading}
               variant="primary"
               size="lg"
               className="w-full"
@@ -489,14 +398,7 @@ const Login: React.FC = () => {
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2 sm:gap-3">
                   <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span className="text-sm sm:text-base">Accessing System...</span>
-                </div>
-              ) : !showPasswordField || !formData.role ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="text-sm sm:text-base">
-                    {!formData.role ? 'Select Role & Enter Email' : 'Enter Valid Email First'}
-                  </span>
+                  <span className="text-sm sm:text-base">Logging In...</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">

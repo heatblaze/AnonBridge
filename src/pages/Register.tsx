@@ -13,7 +13,6 @@ const Register: React.FC = () => {
   
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
     contactNumber: '',
     role: searchParams.get('role') || '',
     department: '',
@@ -83,16 +82,6 @@ const Register: React.FC = () => {
     return '';
   };
 
-  const validatePassword = (password: string) => {
-    if (!password) {
-      return 'Password is required';
-    }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters long';
-    }
-    return '';
-  };
-
   const formatContactNumber = (value: string) => {
     const cleanValue = value.replace(/\D/g, '');
     const limitedValue = cleanValue.slice(0, 10);
@@ -130,11 +119,6 @@ const Register: React.FC = () => {
     const emailError = validateEmail(formData.email);
     if (emailError) {
       newErrors.email = emailError;
-    }
-
-    const passwordError = validatePassword(formData.password);
-    if (passwordError) {
-      newErrors.password = passwordError;
     }
 
     const contactError = validateContactNumber(formData.contactNumber);
@@ -190,7 +174,6 @@ const Register: React.FC = () => {
       // Register the user
       const { data: newUser, error: registerError } = await registerUser({
         email: formData.email,
-        password: formData.password,
         role: formData.role as 'student' | 'faculty',
         department: formData.department,
         year: formData.year,
@@ -205,7 +188,7 @@ const Register: React.FC = () => {
       }
 
       // Success - redirect to login
-      alert('Account created successfully! Please login with your credentials.');
+      alert('Account created successfully! You can now login.');
       navigate(`/login?role=${formData.role}`);
 
     } catch (error) {
@@ -234,13 +217,6 @@ const Register: React.FC = () => {
       const emailError = validateEmail(value);
       if (emailError) {
         setErrors(prev => ({ ...prev, email: emailError }));
-      }
-    }
-
-    if (field === 'password' && value.trim()) {
-      const passwordError = validatePassword(value);
-      if (passwordError) {
-        setErrors(prev => ({ ...prev, password: passwordError }));
       }
     }
 
@@ -365,37 +341,6 @@ const Register: React.FC = () => {
               <p className="text-gray-500 text-xs mt-1">
                 Accepted domains: @manipal.edu or @learner.manipal.edu
               </p>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2 font-rajdhani uppercase tracking-wide">
-                Password *
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="w-full bg-gray-800/50 border border-gray-600/50 rounded-lg pl-10 sm:pl-12 pr-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-300 text-sm sm:text-base"
-                  placeholder="Create a secure password"
-                  required
-                  style={{
-                    focusBorderColor: 'var(--form-primary)',
-                    borderColor: formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : undefined
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--form-primary)'}
-                  onBlur={(e) => e.target.style.borderColor = formData.password ? (errors.password ? '#ef4444' : 'var(--form-primary)') : '#6b7280'}
-                />
-              </div>
-              {errors.password && <p className="text-red-400 text-xs sm:text-sm mt-1">{errors.password}</p>}
-              {!errors.password && formData.password && formData.password.length >= 6 && (
-                <p className="text-green-400 text-xs sm:text-sm mt-1 flex items-center gap-1">
-                  <span className="w-1 h-1 bg-green-400 rounded-full"></span>
-                  Password meets requirements
-                </p>
-              )}
             </div>
 
             {/* Contact Number Field */}
